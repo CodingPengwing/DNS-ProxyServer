@@ -6,7 +6,7 @@ void
 exit_with_error(char *message)
 {
     fprintf(stderr, "%s\n", message);
-    exit(FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 /*  Prints a message to stdout followed by a newline character. */

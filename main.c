@@ -8,9 +8,6 @@
 Packet_t * 
 receive_new_query();
 
-Packet_t * 
-parse_packet(byte_t *raw_data, int data_length);
-
 int main(int argc, char* argv[]) 
 {
     // while (true)
@@ -31,10 +28,13 @@ int main(int argc, char* argv[])
         /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
 
         /* UPDATE CACHE */
+
+        // finished using packet, free it
+        free_packet(packet);
         
         /* --> FINISH THREAD */
     }
-    return SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 Packet_t * 
@@ -55,28 +55,12 @@ receive_new_query()
             bytes_read += read(STDIN_FILENO, &raw_data[bytes_read], 1*sizeof(byte_t));
 
         // Here all the bytes have been received, we can parse the packet
-        Packet_t * packet = parse_packet(raw_data, data_length);
-    
+        Packet_t *packet = new_packet(raw_data, data_length);
+        parse_packet_data(packet);
+
         // // Reset the data_length for the next read (if there is one)
         // data_length = 0;
         return packet;
     }
     return NULL;
-}
-
-
-Packet_t * 
-parse_packet(byte_t *raw_data, int data_length)
-{
-    printf("The content of the file is:\n");
-    for (int i = 0; i < data_length; i++) 
-    {
-        print_byte_as_hexes(raw_data[i]);
-        printf(", ");
-    }
-
-    Header_t *header = new_header(raw_data);
-
-    Packet_t *packet = new_packet(raw_data, data_length);
-    return packet;
 }

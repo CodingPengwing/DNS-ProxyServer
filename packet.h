@@ -8,9 +8,11 @@
 #include <arpa/inet.h>
 #include "util.h"
 
-// A DNS header is always of length 12
+
 #define QUERY 0
 #define RESPONSE 1
+
+// A DNS header is always of length 12
 #define HEADER_LENGTH 12
 
 
@@ -32,11 +34,11 @@ struct packet
     // Additional
 };
 
-Packet_t *
-new_packet(byte_t *raw_data, int data_length);
+Packet_t *new_packet(byte_t *raw_data, int data_length);
 
-void
-free_packet(Packet_t* packet);
+Packet_t *parse_packet_data(Packet_t* packet);
+
+void free_packet(Packet_t* packet);
 
 
 
@@ -63,14 +65,11 @@ struct header
     This function creates a new header, it assumes that the raw data given has length of 12 bytes
     as specified by RFC2535. If this condition is not met, there will be an error.
 */
-Header_t *
-new_header(byte_t *header_raw_data);
+Header_t *new_header(byte_t *header_raw_data);
 
-void
-print_header(Header_t *header);
+void print_header(Header_t *header);
 
-void
-free_header(Header_t *header);
+void free_header(Header_t *header);
 
 
 
@@ -81,14 +80,11 @@ struct question
     double_byte_t class_;
 };
 
-Question_t *
-new_question(byte_t *question_raw_data, int data_length);
+Question_t *new_question(byte_t *question_raw_data, int data_length);
 
-void 
-print_question(Question_t *question);
+void print_question(Question_t *question);
 
-void
-free_question(Question_t *question);
+void free_question(Question_t *question);
 
 
 
@@ -103,14 +99,11 @@ struct resourceRecord
 };
 
 
-ResourceRecord_t *
-new_resourceRecord(byte_t *resourceRecord_raw_data, int data_length);
+ResourceRecord_t *new_resourceRecord(byte_t *resourceRecord_raw_data, int data_length);
 
-void
-print_resourceRecord(ResourceRecord_t *resourceRecord);
+void print_resourceRecord(ResourceRecord_t *resourceRecord);
 
-void
-free_resourceRecord(ResourceRecord_t *resourceRecord);
+void free_resourceRecord(ResourceRecord_t *resourceRecord);
 
 
 #endif

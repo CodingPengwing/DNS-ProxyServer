@@ -7,9 +7,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define SUCCESS 0
-#define FAILURE 1
-
 typedef uint8_t byte_t;
 typedef uint16_t double_byte_t;
 
