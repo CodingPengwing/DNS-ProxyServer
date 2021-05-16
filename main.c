@@ -5,33 +5,17 @@
 #include <ctype.h>
 #include "packet.h"
 
-#include <time.h>
-
-#define REQ_LOG 0
-#define UNIMPLEMENTED_LOG 1
-#define RES_LOG 2
-
 
 int main(int argc, char* argv[]) 
 {
-    static int TIME_BUFFER_LEN = 80;
-    time_t rawtime;
-    struct tm *info;
-    char time_buffer[TIME_BUFFER_LEN];
-    time(&rawtime);
-
-    FILE *fp;
-    fp = fopen("dns_svr.log", "w");
-     //Don't forget to close the file when finished
+    FILE *fp = fopen("dns_svr.log", "w");
+    // static int TIME_BUFFER_LEN = 80;
+    // char time_buffer[TIME_BUFFER_LEN];
 
     while (true)
     {
         /* RECEIVE NEW QUERY */
         Packet_t *packet = receive_new_message();
-
-        info = localtime(&rawtime);
-        strftime(time_buffer, TIME_BUFFER_LEN, "%FT%T%z", info);
-        // printf("%s\n", time_buffer );
 
         if (packet) 
         {
@@ -56,6 +40,8 @@ int main(int argc, char* argv[])
             /* --> FINISH THREAD */
         }
     }
+
     fclose(fp);
     return EXIT_SUCCESS;
 }
+

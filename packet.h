@@ -32,6 +32,9 @@ struct packet
     byte_t *raw_message;
     unsigned int length;
     unsigned int type;
+    time_t time_received;
+    time_t TTL;
+    time_t time_expire;
     Header_t *header;
     Question_t *question;
     ResourceRecord_t *answer;

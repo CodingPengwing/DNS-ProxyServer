@@ -16,6 +16,41 @@ println(char *message)
     printf("%s\n", message);
 }
 
+time_t
+get_current_time_raw()
+{
+    time_t raw_time;
+    // Get the timer value since time 0 in UTC and put into raw_time
+    time(&raw_time);
+    return raw_time;
+}
+
+void
+get_current_timestamp(char *time_buffer, unsigned int buffer_length)
+{
+    time_t raw_time = get_current_time_raw();
+    convert_raw_time(time_buffer, buffer_length, raw_time);
+}
+
+void
+convert_raw_time(char *time_buffer, unsigned int buffer_length, time_t raw_time)
+{
+    // Compute the localtime by using the raw_time value
+    struct tm *info = localtime(&raw_time);
+    // Fill the time_buffer with time info according to the format
+    strftime(time_buffer, buffer_length, "%FT%T%z", info);
+}
+
+void
+print_log(FILE *fp, log_t log_type, char *domain_name, char *TTL_timestamp)
+{
+
+}
+
+
+
+/***    Byte and bit manipulations  ***/
+
 double_byte_t
 append_2_bytes(byte_t byte_1, byte_t byte_2)
 {

@@ -11,7 +11,6 @@ receive_new_message()
     if (read(STDIN_FILENO, &message_length, 2*sizeof(byte_t)))
     {   
         message_length = ntohs(message_length);
-        printf("Length of the file is %d \n", message_length);
 
         byte_t *raw_data = (byte_t*)malloc(message_length*sizeof(byte_t));
         // Read until all the bytes for the packet are received
@@ -34,6 +33,7 @@ new_packet(byte_t *raw_message, unsigned int length)
     if (!packet) exit_with_error("Error in new_packet(): failed malloc.");
     packet->raw_message = raw_message;
     packet->length = length;
+    packet->time_received = get_current_time_raw();
     parse_raw_message(packet);
     return packet;
 }
@@ -49,18 +49,20 @@ parse_raw_message(Packet_t* packet)
     byte_t *raw_message = packet->raw_message;
     Header_t *header = new_header(raw_message);
     packet->header = header;
+    // Determine whether this packet is a query or response.
+    packet->type = packet->header->QR;
 
-    if (packet->header->QDCOUNT) 
-    {
-        packet->question = new_question(raw_message + HEADER_LENGTH);
-    }
-    else exit_with_error("Error in parse_raw_message(): no questions.");
+    if (!packet->header->QDCOUNT) exit_with_error("Error in parse_raw_message(): no questions.");
+    packet->question = new_question(raw_message + HEADER_LENGTH);
 
+    // Look for the first answer
     if (packet->header->ANCOUNT)
     {
         unsigned int question_length = 0;
-        if (packet->question) question_length += packet->question->length;
+        question_length += packet->question->length;
         packet->answer = new_resourceRecord(raw_message + HEADER_LENGTH + question_length);
+        packet->TTL = packet->answer->TTL;
+        packet->time_expire = packet->time_received + packet->TTL;
     }
     
     return packet;
@@ -71,17 +73,39 @@ void
 print_packet(Packet_t *packet)
 {       
     if (!packet) exit_with_error("Error in print_packet(): null pointer.");
+    static int TIME_BUFFER_LEN = 80;
+    char time_buffer[TIME_BUFFER_LEN];
+
+    println("----- Packet -----");
+
+    // Print the time parameters
+    convert_raw_time(time_buffer, TIME_BUFFER_LEN, packet->time_received);
+    printf("Time received: %s\n", time_buffer);
+    if (packet->answer) 
+    {
+        convert_raw_time(time_buffer, TIME_BUFFER_LEN, packet->time_expire);
+        printf("Time expire: %s", time_buffer); println("");
+    }
+    // Print the message content
     unsigned int message_length = packet->length;
-    printf("The content of the message is: ");
+    printf("Message length: %d\n", message_length);
+    printf("Message content: ");
     for (unsigned int i = 0; i < message_length; i++) 
     {
         print_byte_as_hexes(packet->raw_message[i]);
         if (i < message_length-1) printf(", ");
         else println("");
-    }
+    } println("");
+    
+    // Print the header
     print_header(packet->header); println("");
+    // Print the question
     print_question(packet->question); println("");
+    // Print the answer
     if (packet->answer) print_resourceRecord(packet->answer); println("");
+
+    println("--------------------");
+
     fflush(stdout);
 }
 
@@ -177,7 +201,7 @@ void
 print_header(Header_t *header)
 {
     if (!header) exit_with_error("Error in print_header(): null pointer.");
-    printf("Header - ID: "); print_double_byte_as_hexes(header->ID); printf(", ");
+    printf("- Header - ID: "); print_double_byte_as_hexes(header->ID); printf(", ");
     printf("QR: %X, ", header->QR);
     printf("Opcode: %X, ", header->Opcode);
     printf("AA: %X, ", header->AA);
@@ -267,7 +291,7 @@ void
 print_question(Question_t *question)
 {
     if (!question) exit_with_error("Error in print_question(): null pointer.");
-    printf("Question - QNAME: "); 
+    printf("- Question - QNAME: "); 
     printf("%s, ", question->QNAME);
     printf("QTYPE: %X, ", question->QTYPE);
     printf("QCLASS: %X, ", question->QCLASS);
@@ -322,7 +346,7 @@ void
 print_resourceRecord(ResourceRecord_t *resourceRecord)
 {
     if (!resourceRecord) exit_with_error("Error in print_resourceRecord(): null pointer.");
-    printf("Resource Record - NAME: "); print_double_byte_as_hexes(resourceRecord->NAME);
+    printf("- Resource Record - NAME: "); print_double_byte_as_hexes(resourceRecord->NAME);
     printf(", TYPE: "); print_double_byte_as_hexes(resourceRecord->TYPE);
     printf(", CLASS: "); print_double_byte_as_hexes(resourceRecord->CLASS);
     printf(", TTL: "); print_quad_byte_as_hexes(resourceRecord->TTL);
