@@ -33,7 +33,7 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm $(HELPERS) dns_svr phase1
+	rm $(HELPERS) dns_svr phase1 dns_svr.log
 
 run1:
 	./dns_svr < packets/1.comp30023.a.req.raw
