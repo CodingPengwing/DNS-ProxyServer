@@ -16,6 +16,7 @@ println(char *message)
     printf("%s\n", message);
 }
 
+/*  Get the current time in raw time_t format. */
 time_t
 get_current_time_raw()
 {
@@ -25,6 +26,7 @@ get_current_time_raw()
     return raw_time;
 }
 
+/*  Get the current time in readable time format. */
 void
 get_current_timestamp(char *time_buffer, unsigned int buffer_length)
 {
@@ -32,6 +34,7 @@ get_current_timestamp(char *time_buffer, unsigned int buffer_length)
     convert_raw_time(time_buffer, buffer_length, raw_time);
 }
 
+/*  Converts a raw time into the specified time format and fills the string time_buffer. */
 void
 convert_raw_time(char *time_buffer, unsigned int buffer_length, time_t raw_time)
 {
@@ -41,10 +44,62 @@ convert_raw_time(char *time_buffer, unsigned int buffer_length, time_t raw_time)
     strftime(time_buffer, buffer_length, "%FT%T%z", info);
 }
 
+/*  Logs an event that is standard operation. */
 void
-print_log(FILE *fp, log_t log_type, char *domain_name, char *TTL_timestamp)
+log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address)
 {
+    // Get the current timestamp
+    static int TIME_BUFFER_LEN = 80;
+    char current_timestamp[TIME_BUFFER_LEN];
+    time_t current_time_raw = get_current_time_raw();
+    convert_raw_time(current_timestamp, TIME_BUFFER_LEN, current_time_raw);
+    
+    // Log the item
+    switch (log_type)
+    {
+        case REQUEST:
+            if (!req_domain_name) exit_with_error("Error in log_request(): case REQUEST, not enough arguments provided.");
+            fprintf(fp, "%s requested %s\n", current_timestamp, req_domain_name);
+            break;
+        case UNIMPLEMENTED_REQUEST:
+            fprintf(fp, "%s unimplemented request\n", current_timestamp);
+            break;
+        case RESPONSE:
+            if (!req_domain_name || !IP_address) exit_with_error("Error in log_request(): case RESPONSE, not enough arguments provided.");
+            fprintf(fp, "%s %s is at %s\n", current_timestamp, req_domain_name, IP_address);
+            break;
+        default:
+            exit_with_error("Error in log_request(): invalid log type.");
+            break;
+    }
+}
 
+
+/*  Logs an event that is related to cache. */
+void
+log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_name, char *cache_expiry_timestamp)
+{
+    // Get the current timestamp
+    static int TIME_BUFFER_LEN = 80;
+    char current_timestamp[TIME_BUFFER_LEN];
+    time_t current_time_raw = get_current_time_raw();
+    convert_raw_time(current_timestamp, TIME_BUFFER_LEN, current_time_raw);
+    
+    // Log the item
+    switch (log_type)
+    {
+        case CACHE_EXPIRY:
+            if (!req_domain_name || !cache_expiry_timestamp)  exit_with_error("Error in log_cache(): case CACHE_EXPIRY, not enough arguments provided.");
+            fprintf(fp, "%s %s expires at %s\n", current_timestamp, req_domain_name, cache_expiry_timestamp);
+            break;
+        case CACHE_EVICTION:
+            if (!req_domain_name || !evict_domain_name) exit_with_error("Error in log_cache(): case REQUEST, not enough arguments provided.");
+            fprintf(fp, "%s replacing %s by %s\n", current_timestamp, evict_domain_name, req_domain_name);
+            break;
+        default:
+            exit_with_error("Error in log_cache(): invalid log type.");
+            break;
+    }
 }
 
 

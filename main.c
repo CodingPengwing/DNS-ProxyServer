@@ -20,6 +20,8 @@ int main(int argc, char* argv[])
         if (packet) 
         {
             print_packet(packet);
+            log_request(fp, REQUEST, packet->question->QNAME, NULL);
+            fflush(fp);
             // --> START A THREAD HERE
 
             /* CHECK VALIDITY OF PACKET, IF INVALID, SEND BACK ERROR CODE 4 STRAIGHT AWAY --> FINISH THREAD */
