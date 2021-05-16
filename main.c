@@ -5,62 +5,57 @@
 #include <ctype.h>
 #include "packet.h"
 
-Packet_t * 
-receive_new_query();
+#include <time.h>
+
+#define REQ_LOG 0
+#define UNIMPLEMENTED_LOG 1
+#define RES_LOG 2
+
 
 int main(int argc, char* argv[]) 
 {
-    // while (true)
+    static int TIME_BUFFER_LEN = 80;
+    time_t rawtime;
+    struct tm *info;
+    char time_buffer[TIME_BUFFER_LEN];
+    time(&rawtime);
+
+    FILE *fp;
+    fp = fopen("dns_svr.log", "w");
+     //Don't forget to close the file when finished
+
+    while (true)
     {
-        // --> START A THREAD HERE
-
         /* RECEIVE NEW QUERY */
-        Packet_t *packet = receive_new_query();
+        Packet_t *packet = receive_new_message();
 
-        /* CHECK VALIDITY OF PACKET, IF INVALID, SEND BACK ERROR CODE 4 STRAIGHT AWAY --> FINISH THREAD */
-        
-        /* CHECK CACHE FOR EXISTING RECORDS, CHECK EXPIRY OF RECORDS */
+        info = localtime(&rawtime);
+        strftime(time_buffer, TIME_BUFFER_LEN, "%FT%T%z", info);
+        // printf("%s\n", time_buffer );
 
-        /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY --> FINISH THREAD */
+        if (packet) 
+        {
+            print_packet(packet);
+            // --> START A THREAD HERE
 
-        /* IF THERE IS NO VALID MATCHING EXISTING RECORD, SEND QUERY TO SERVER */
+            /* CHECK VALIDITY OF PACKET, IF INVALID, SEND BACK ERROR CODE 4 STRAIGHT AWAY --> FINISH THREAD */
+            
+            /* CHECK CACHE FOR EXISTING RECORDS, CHECK EXPIRY OF RECORDS */
 
-        /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
+            /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY --> FINISH THREAD */
 
-        /* UPDATE CACHE */
+            /* IF THERE IS NO VALID MATCHING EXISTING RECORD, SEND QUERY TO SERVER */
 
-        // finished using packet, free it
-        free_packet(packet);
-        
-        /* --> FINISH THREAD */
+            /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
+
+            /* UPDATE CACHE */
+
+            // finished using packet, free it
+            free_packet(packet);
+            
+            /* --> FINISH THREAD */
+        }
     }
+    fclose(fp);
     return EXIT_SUCCESS;
-}
-
-Packet_t * 
-receive_new_query()
-{   
-    double_byte_t data_length;
-    bool query_received = read(STDIN_FILENO, &data_length, 2*sizeof(byte_t));
-
-    if (query_received)
-    {   
-        data_length = ntohs(data_length);
-        printf("Length of the file is %d \n", data_length);
-
-        byte_t *raw_data = (byte_t*)malloc(data_length*sizeof(byte_t));
-        // Read until all the bytes for the packet are received
-        int bytes_read = 0;
-        while (bytes_read < data_length) 
-            bytes_read += read(STDIN_FILENO, &raw_data[bytes_read], 1*sizeof(byte_t));
-
-        // Here all the bytes have been received, we can parse the packet
-        Packet_t *packet = new_packet(raw_data, data_length);
-        parse_packet_data(packet);
-
-        // // Reset the data_length for the next read (if there is one)
-        // data_length = 0;
-        return packet;
-    }
-    return NULL;
 }

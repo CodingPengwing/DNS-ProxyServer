@@ -1,68 +1,126 @@
 
 #include "packet.h"
 
+/*  Checks stdin for an incoming message. When a message has been fully received,
+    creates a Packet object and returns it. 
+*/
+Packet_t * 
+receive_new_message()
+{   
+    double_byte_t message_length;
+    if (read(STDIN_FILENO, &message_length, 2*sizeof(byte_t)))
+    {   
+        message_length = ntohs(message_length);
+        printf("Length of the file is %d \n", message_length);
+
+        byte_t *raw_data = (byte_t*)malloc(message_length*sizeof(byte_t));
+        // Read until all the bytes for the packet are received
+        unsigned int bytes_read = 0;
+        while (bytes_read < message_length) 
+            bytes_read += read(STDIN_FILENO, &raw_data[bytes_read], 1*sizeof(byte_t));
+
+        // Here all the bytes have been received, we can parse the packet
+        Packet_t *packet = new_packet(raw_data, message_length);
+        return packet;
+    }
+    return NULL;
+}
+
+/*  Creates a new Packet object that holds a raw_message and the length of that raw message. */
 Packet_t *
-new_packet(byte_t *raw_data, int length)
+new_packet(byte_t *raw_message, unsigned int length)
 {
-    Packet_t *packet = (Packet_t*)malloc(sizeof(*packet));
+    Packet_t *packet = (Packet_t*) malloc(sizeof(*packet));
     if (!packet) exit_with_error("Error in new_packet(): failed malloc.");
-    packet->raw_data = raw_data;
+    packet->raw_message = raw_message;
     packet->length = length;
-
-    // find header section
-
-    // check if is_question
-
-    // find question section, create question struct
-
-    // find resourceRecord section, create resourceRecord struct
-
+    parse_raw_message(packet);
     return packet;
 }
 
+/*  Parses a raw message inside a packet to extract the contents and fill the attributes of the packet. 
+    This function assumes that a valid raw_message was provided when the Packet object was created.
+*/
 Packet_t * 
-parse_packet_data(Packet_t* packet)
+parse_raw_message(Packet_t* packet)
 {
-    byte_t *raw_data = packet->raw_data;
-    int data_length = packet->length;
-    printf("The content of the file is:\n");
-    for (int i = 0; i < data_length; i++) 
-    {
-        print_byte_as_hexes(raw_data[i]);
-        if (i < data_length-1) printf(", ");
-        else println("");
-    }
-
-    Header_t *header = new_header(raw_data);
+    if (!packet) exit_with_error("Error in parse_raw_message(): null pointer.");
+    if (!packet->raw_message) exit_with_error("Error in parse_raw_message(): no raw_message in packet.");
+    byte_t *raw_message = packet->raw_message;
+    Header_t *header = new_header(raw_message);
     packet->header = header;
-    print_header(packet->header);
 
     if (packet->header->QDCOUNT) 
     {
-
+        packet->question = new_question(raw_message + HEADER_LENGTH);
     }
-    else exit_with_error("Error in parse_packet_data(): ");
+    else exit_with_error("Error in parse_raw_message(): no questions.");
+
+    if (packet->header->ANCOUNT)
+    {
+        unsigned int question_length = 0;
+        if (packet->question) question_length += packet->question->length;
+        packet->answer = new_resourceRecord(raw_message + HEADER_LENGTH + question_length);
+    }
     
     return packet;
 }
 
+/*  Prints all the contents of a Packet */
 void
-free_packet(Packet_t* packet)
+print_packet(Packet_t *packet)
+{       
+    if (!packet) exit_with_error("Error in print_packet(): null pointer.");
+    unsigned int message_length = packet->length;
+    printf("The content of the message is: ");
+    for (unsigned int i = 0; i < message_length; i++) 
+    {
+        print_byte_as_hexes(packet->raw_message[i]);
+        if (i < message_length-1) printf(", ");
+        else println("");
+    }
+    print_header(packet->header); println("");
+    print_question(packet->question); println("");
+    if (packet->answer) print_resourceRecord(packet->answer); println("");
+    fflush(stdout);
+}
+
+/*  Frees a Packet object */
+void
+free_packet(Packet_t *packet)
 {
     if (!packet) exit_with_error("Error in free_packet(): null pointer.");
-    if (packet->raw_data) free(packet->raw_data);
-    if (packet->header) free_header(packet->header);
-    if (packet->question) free_question(packet->question);
+    free(packet->raw_message);
+    free_header(packet->header);
+    free_question(packet->question);
     if (packet->answer) free_resourceRecord(packet->answer);
 }
 
-/*  
-    This function creates a new header, it assumes that the raw data given has length of 12 bytes
+/*  This function creates a new header, it assumes that the raw data given has length of 12 bytes
     as specified by RFC2535. If this condition is not met, there will be an error.
 */
 Header_t *
-new_header(byte_t *header_raw_data)
+new_header(byte_t *header_raw_message)
 {
+
+    Header_t *header = (Header_t*) malloc(sizeof(*header));
+    if (!header) exit_with_error("Error in new_header(): failed malloc.");
+
+    // *** Parse the raw header data into individual fields ***
+
+    // The ID field is the first 2 bytes of the header
+    header->ID = append_2_bytes(header_raw_message[0], header_raw_message[1]);
+    // The query parameters are bytes 3 and 4 of the header
+    double_byte_t query_parameters = append_2_bytes(header_raw_message[2], header_raw_message[3]);
+    // The QDCOUNT is bytes 5 and 6 of the header
+    header->QDCOUNT = append_2_bytes(header_raw_message[4], header_raw_message[5]);
+    // The ANCOUNT is bytes 6 and 6 of the header
+    header->ANCOUNT = append_2_bytes(header_raw_message[6], header_raw_message[7]);
+    // The NSCOUNT is bytes 8 and 9 of the header
+    header->NSCOUNT = append_2_bytes(header_raw_message[8], header_raw_message[9]);
+    // The ARCOUNT is bytes 10 and 11 of the header
+    header->ARCOUNT = append_2_bytes(header_raw_message[10], header_raw_message[11]);
+
     // Bit masks
     static double_byte_t QR_MASK = 0x8000;
     static double_byte_t OPCODE_MASK = 0x7800;
@@ -74,6 +132,8 @@ new_header(byte_t *header_raw_data)
     static double_byte_t AD_MASK = 0x20;
     static double_byte_t CD_MASK = 0x10;
     static double_byte_t RCODE_MASK = 0xf;
+
+    // Bit shifts
     static int QR_BIT_SHIFT = 15;
     static int OPCODE_BIT_SHIFT = 11;
     static int AA_BIT_SHIFT = 10;
@@ -84,24 +144,6 @@ new_header(byte_t *header_raw_data)
     static int AD_BIT_SHIFT = 5;
     static int CD_BIT_SHIFT = 4;
     static int RCODE_BIT_SHIFT = 0;
-
-    Header_t *header = (Header_t*)malloc(sizeof(*header));
-    if (!header) exit_with_error("Error in new_header(): failed malloc.");
-
-    // *** Parse the raw header data into individual fields ***
-
-    // The ID field is the first 2 bytes of the header
-    header->ID = append_2_bytes(header_raw_data[0], header_raw_data[1]);
-    // The query parameters are bytes 3 and 4 of the header
-    double_byte_t query_parameters = append_2_bytes(header_raw_data[2], header_raw_data[3]);
-    // The QDCOUNT is bytes 5 and 6 of the header
-    header->QDCOUNT = append_2_bytes(header_raw_data[4], header_raw_data[5]);
-    // The ANCOUNT is bytes 6 and 6 of the header
-    header->ANCOUNT = append_2_bytes(header_raw_data[6], header_raw_data[7]);
-    // The NSCOUNT is bytes 8 and 9 of the header
-    header->NSCOUNT = append_2_bytes(header_raw_data[8], header_raw_data[9]);
-    // The ARCOUNT is bytes 10 and 11 of the header
-    header->ARCOUNT = append_2_bytes(header_raw_data[10], header_raw_data[11]);
 
     // Extract the exact bits of the query parameters
     double_byte_t QR = query_parameters & QR_MASK;
@@ -114,6 +156,8 @@ new_header(byte_t *header_raw_data)
     double_byte_t AD = query_parameters & AD_MASK;
     double_byte_t CD = query_parameters & CD_MASK;
     double_byte_t RCODE = query_parameters & RCODE_MASK;
+
+    // Shift the bits of the parameters
     header->QR = QR >> QR_BIT_SHIFT;
     header->Opcode = Opcode >> OPCODE_BIT_SHIFT;
     header->AA = AA >> AA_BIT_SHIFT;
@@ -128,28 +172,30 @@ new_header(byte_t *header_raw_data)
     return header;
 }
 
+/*  Prints all the content of a Header section */
 void
 print_header(Header_t *header)
 {
     if (!header) exit_with_error("Error in print_header(): null pointer.");
-    printf("Header ID: "); print_double_byte_as_hexes(header->ID);
-    println("");
-    printf("QR: %X\n", header->QR);
-    printf("Opcode: %X\n", header->Opcode);
-    printf("AA: %X\n", header->AA);
-    printf("TC: %X\n", header->TC);
-    printf("RD: %X\n", header->RD);
-    printf("RA: %X\n", header->RA);
-    printf("Z: %X\n", header->Z);
-    printf("AD: %X\n", header->AD);
-    printf("CD: %X\n", header->CD);
-    printf("RCODE: %X\n", header->RCODE);
-    printf("QDCOUNT: %X\n", header->QDCOUNT);
-    printf("ANCOUNT: %X\n", header->ANCOUNT);
-    printf("NSCOUNT: %X\n", header->NSCOUNT);
-    printf("ARCOUNT: %X\n", header->ARCOUNT);
+    printf("Header - ID: "); print_double_byte_as_hexes(header->ID); printf(", ");
+    printf("QR: %X, ", header->QR);
+    printf("Opcode: %X, ", header->Opcode);
+    printf("AA: %X, ", header->AA);
+    printf("TC: %X, ", header->TC);
+    printf("RD: %X, ", header->RD);
+    printf("RA: %X, ", header->RA);
+    printf("Z: %X, ", header->Z);
+    printf("AD: %X, ", header->AD);
+    printf("CD: %X, ", header->CD);
+    printf("RCODE: %X, ", header->RCODE);
+    printf("QDCOUNT: %X, ", header->QDCOUNT);
+    printf("ANCOUNT: %X, ", header->ANCOUNT);
+    printf("NSCOUNT: %X, ", header->NSCOUNT);
+    printf("ARCOUNT: %X", header->ARCOUNT);
+    fflush(stdout);
 }
 
+/*  Frees a Header object */
 void
 free_header(Header_t *header)
 {
@@ -160,23 +206,81 @@ free_header(Header_t *header)
 
 
 
-
+/*  Creates a new question section for a packet, parsing all the data in this section into the Question struct.
+    The question_raw_message pointer should point to the start of the question section and not the start of
+    the entire raw_message. 
+*/
 Question_t *
-new_question(byte_t *question_raw_data, int length)
+new_question(byte_t *question_raw_message)
 {
-    Question_t *question = (Question_t*)malloc(sizeof(*question));
+    Question_t *question = (Question_t*) malloc(sizeof(*question));
     if (!question) exit_with_error("Error in new_question(): failed malloc.");
-    // find domain name, malloc
-    // find type
-    // find class
+
+    // Read the QNAME
+    unsigned int i = 0;
+    // Get first byte (length octet) to know what length to read in next
+    unsigned int bytes_to_read = (unsigned int) question_raw_message[i];
+    // malloc enough space for next domain name section
+    char *QNAME = (char*) malloc(bytes_to_read*sizeof(char));
+    // start reading the bytes and parsing to char array QNAME
+    while (question_raw_message[++i])
+    {
+        // if we are in the middle of a domain name section
+        if (bytes_to_read)
+        {   
+            // parse data to array
+            QNAME[i-1] = (char) question_raw_message[i];
+            --bytes_to_read;
+        }
+        // if we encountered a length octet
+        else 
+        {   
+            // determine the length of the next section
+            bytes_to_read = (unsigned int) question_raw_message[i];
+            QNAME = (char*) realloc(QNAME, i + bytes_to_read);
+            QNAME[i-1] = FULL_STOP;
+        }
+    }
+    QNAME[i-1] = NULL_BYTE;
+    question->QNAME = QNAME;
+    // Length of QNAME including null byte
+    question->QNAME_length = i;
+
+    // Skip the null byte in the raw_message
+    ++i;
+
+    // Extract the QTYPE and QCLASS
+    byte_t QTYPE_byte_1 = question_raw_message[i++];
+    byte_t QTYPE_byte_2 = question_raw_message[i++];
+    byte_t QCLASS_byte_1 = question_raw_message[i++];
+    byte_t QCLASS_byte_2 = question_raw_message[i++];
+    question->QTYPE = append_2_bytes(QTYPE_byte_1, QTYPE_byte_2);
+    question->QCLASS = append_2_bytes(QCLASS_byte_1, QCLASS_byte_2);
+    
+    // Combined length of QNAME (including null byte), QTYPE and QCLASS. (ie. total length of the question section)
+    question->length = i;
     return question;
 }
 
+/*  Prints all the content of a Question object */
+void
+print_question(Question_t *question)
+{
+    if (!question) exit_with_error("Error in print_question(): null pointer.");
+    printf("Question - QNAME: "); 
+    printf("%s, ", question->QNAME);
+    printf("QTYPE: %X, ", question->QTYPE);
+    printf("QCLASS: %X, ", question->QCLASS);
+    printf("Length: %d", question->length);
+    fflush(stdout);
+}
+
+/*  Frees a Question object */
 void
 free_question(Question_t *question)
 {
     if (!question) exit_with_error("Error in free_question(): null pointer.");
-    free(question->domain_name);
+    free(question->QNAME);
     free(question);
 }
 
@@ -184,18 +288,56 @@ free_question(Question_t *question)
 
 
 
+
+/* Creates a new resource record object, this function assumes that the NAME field of the resource record is in compressed form */
 ResourceRecord_t *
-new_resourceRecord(byte_t *resourceRecord_raw_data, int length)
+new_resourceRecord(byte_t *resourceRecord_raw_message)
 {
-    ResourceRecord_t *resourceRecord = (ResourceRecord_t*)malloc(sizeof(*resourceRecord));
+    ResourceRecord_t *resourceRecord = (ResourceRecord_t*) malloc(sizeof(*resourceRecord));
     if (!resourceRecord) exit_with_error("Error in new_resourceRecord(): failed malloc.");
+
+    // Read the NAME from the 1st and 2nd bytes of the raw message 
+    resourceRecord->NAME = append_2_bytes(resourceRecord_raw_message[0], resourceRecord_raw_message[1]);
+    // Read the TYPE from the 3rd and 4th bytes of the raw message
+    resourceRecord->TYPE = append_2_bytes(resourceRecord_raw_message[2], resourceRecord_raw_message[3]);
+    // Read the CLASS from the 5th and 6th bytes of the raw message
+    resourceRecord->CLASS = append_2_bytes(resourceRecord_raw_message[4], resourceRecord_raw_message[5]);
+    // Read the TTL from the 7th and 8th bytes of the raw message
+    resourceRecord->TTL = append_4_bytes(resourceRecord_raw_message[6], resourceRecord_raw_message[7], resourceRecord_raw_message[8], resourceRecord_raw_message[9]);
+    // Read the RDLENGTH from the 9th and 10th bytes of the raw message
+    resourceRecord->RDLENGTH = append_2_bytes(resourceRecord_raw_message[10], resourceRecord_raw_message[11]);
+
+    // Skip the first 12 bytes we just read in
+    resourceRecord_raw_message += 12;
+    resourceRecord->RDATA = (byte_t*) malloc(resourceRecord->RDLENGTH * sizeof(byte_t));
+    for (int i = 0; i < resourceRecord->RDLENGTH; i++) resourceRecord->RDATA[i] = resourceRecord_raw_message[i];
+    
+    if (inet_ntop(AF_INET6, resourceRecord->RDATA, resourceRecord->IP_address, INET6_ADDRSTRLEN) == NULL)
+        exit_with_error("Error in new_resourceRecord(): failed to convert RDATA to IP address.");
+
     return resourceRecord;
+}
+
+void 
+print_resourceRecord(ResourceRecord_t *resourceRecord)
+{
+    if (!resourceRecord) exit_with_error("Error in print_resourceRecord(): null pointer.");
+    printf("Resource Record - NAME: "); print_double_byte_as_hexes(resourceRecord->NAME);
+    printf(", TYPE: "); print_double_byte_as_hexes(resourceRecord->TYPE);
+    printf(", CLASS: "); print_double_byte_as_hexes(resourceRecord->CLASS);
+    printf(", TTL: "); print_quad_byte_as_hexes(resourceRecord->TTL);
+    printf(", RDLENGTH: "); print_double_byte_as_hexes(resourceRecord->RDLENGTH);
+    printf(", RDATA: "); 
+    for (int i = 0; i < resourceRecord->RDLENGTH; i++) print_byte_as_hexes(resourceRecord->RDATA[i]);
+    printf(", IP address: %s", resourceRecord->IP_address);
+    fflush(stdout);
 }
 
 void
 free_resourceRecord(ResourceRecord_t *resourceRecord)
 {
     if (!resourceRecord) exit_with_error("Error in free_resourceRecord(): null pointer.");
+    free(resourceRecord->RDATA);
     free(resourceRecord);
 }
 

@@ -26,6 +26,20 @@ append_2_bytes(byte_t byte_1, byte_t byte_2)
     return result;
 }
 
+quad_byte_t
+append_4_bytes(byte_t byte_1, byte_t byte_2, byte_t byte_3, byte_t byte_4)
+{
+    int by_8_bits = 8, by_16_bits = 16, by_24_bits = 24;
+    quad_byte_t byte__1 = (quad_byte_t) byte_1;
+    byte__1 = byte__1 << by_24_bits;
+    quad_byte_t byte__2 = (quad_byte_t) byte_2;
+    byte__2 = byte__2 << by_16_bits;
+    quad_byte_t byte__3 = (quad_byte_t) byte_3;
+    byte__3 = byte__3 << by_8_bits;
+    quad_byte_t byte__4 = (quad_byte_t) byte_4;
+    return byte__1 | byte__2 | byte__3 | byte__4;
+}
+
 byte_t
 get_1st_nibble_from_byte(byte_t byte)
 {
@@ -60,6 +74,8 @@ get_2nd_byte_from_double_byte(double_byte_t double_byte)
     return result;
 }
 
+
+
 void 
 print_byte_as_hexes(byte_t byte) 
 {
@@ -74,4 +90,16 @@ void print_double_byte_as_hexes(double_byte_t double_byte)
     byte_t byte_2 = get_2nd_byte_from_double_byte(double_byte);
     print_byte_as_hexes(byte_1);
     print_byte_as_hexes(byte_2);
+}
+
+void print_quad_byte_as_hexes(quad_byte_t quad_byte)
+{
+    int by_16_bits = 16;
+    quad_byte_t double_byte_1 = quad_byte;
+    double_byte_1 = double_byte_1 >> by_16_bits;
+    quad_byte_t double_byte_2 = quad_byte;
+    double_byte_2 = double_byte_2 << by_16_bits;
+    double_byte_2 = double_byte_2 >> by_16_bits;
+    print_double_byte_as_hexes(double_byte_1);
+    print_double_byte_as_hexes(double_byte_2);
 }
