@@ -6,7 +6,7 @@
 CC=clang
 # CC=gcc
 HELPERS=util.o packet.o
-COPT=-Wall -Wpedantic -g
+COPT=-Wall -Wpedantic -g -lpthread
 BIN_PHASE1=phase1
 BIN_PHASE2=dns_svr
 

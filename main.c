@@ -9,9 +9,8 @@
 int main(int argc, char* argv[]) 
 {
     FILE *fp = fopen("dns_svr.log", "w");
-    // static int TIME_BUFFER_LEN = 80;
-    // char time_buffer[TIME_BUFFER_LEN];
-
+    pthread_mutex_t cache_lock;
+    
     while (true)
     {
         /* RECEIVE NEW QUERY */
@@ -19,22 +18,28 @@ int main(int argc, char* argv[])
 
         if (packet) 
         {
+
             print_packet(packet);
             log_request(fp, REQUEST, packet->question->QNAME, NULL);
             fflush(fp);
-            // --> START A THREAD HERE
 
             /* CHECK VALIDITY OF PACKET, IF INVALID, SEND BACK ERROR CODE 4 STRAIGHT AWAY --> FINISH THREAD */
             
-            /* CHECK CACHE FOR EXISTING RECORDS, CHECK EXPIRY OF RECORDS */
-
+            // pthread_mutex_lock(&cache_lock)
+            /*  Check Cache for expired records */
+            /*  Check Cache for existing valid record, should return record if there's a match, else NULL */
+            // pthread_mutex_unlock(&cache_lock)
             /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY --> FINISH THREAD */
+            
+            /* CREATE SOCKET CONNECTION WITH SERVER */
+            /* SEND QUERY TO SERVER, GET RESPONSE */
+            /* LOG THE RESPONSE */
 
-            /* IF THERE IS NO VALID MATCHING EXISTING RECORD, SEND QUERY TO SERVER */
+            // pthread_mutex_lock(&cache_lock)
+            /* UPDATE CACHE */
+            // pthread_mutex_unlock(&cache_lock)
 
             /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
-
-            /* UPDATE CACHE */
 
             // finished using packet, free it
             free_packet(packet);

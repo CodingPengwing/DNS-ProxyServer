@@ -11,6 +11,8 @@
 #include "util.h"
 
 
+#define OPERATING_PORT 8053
+
 #define QUERY 0
 #define RESPONSE 1
 
