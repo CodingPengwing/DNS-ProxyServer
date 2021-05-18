@@ -5,10 +5,10 @@
     creates a Packet object and returns it. 
 */
 Packet_t * 
-receive_new_message()
+receive_new_message(int input_file_descriptor)
 {   
     double_byte_t message_length;
-    if (read(STDIN_FILENO, &message_length, 2*sizeof(byte_t)))
+    if (read(input_file_descriptor, &message_length, 2*sizeof(byte_t)))
     {   
         message_length = ntohs(message_length);
 
@@ -16,7 +16,7 @@ receive_new_message()
         // Read until all the bytes for the packet are received
         unsigned int bytes_read = 0;
         while (bytes_read < message_length) 
-            bytes_read += read(STDIN_FILENO, &raw_data[bytes_read], 1*sizeof(byte_t));
+            bytes_read += read(input_file_descriptor, &raw_data[bytes_read], 1*sizeof(byte_t));
 
         // Here all the bytes have been received, we can parse the packet
         Packet_t *packet = new_packet(raw_data, message_length);
@@ -34,6 +34,7 @@ new_packet(byte_t *raw_message, unsigned int length)
     packet->raw_message = raw_message;
     packet->length = length;
     packet->time_received = get_current_time_raw();
+    packet->TTL = 0;
     parse_raw_message(packet);
     return packet;
 }
@@ -62,10 +63,16 @@ parse_raw_message(Packet_t* packet)
         question_length += packet->question->length;
         packet->answer = new_resourceRecord(raw_message + HEADER_LENGTH + question_length);
         packet->TTL = packet->answer->TTL;
-        packet->time_expire = packet->time_received + packet->TTL;
     }
+    packet->time_expire = packet->time_received + packet->TTL;
     
     return packet;
+}
+
+void
+packet_to_message(Packet_t *packet)
+{
+    
 }
 
 /*  Prints all the contents of a Packet */
@@ -119,6 +126,11 @@ free_packet(Packet_t *packet)
     free_question(packet->question);
     if (packet->answer) free_resourceRecord(packet->answer);
 }
+
+
+
+
+
 
 /*  This function creates a new header, it assumes that the raw data given has length of 12 bytes
     as specified by RFC2535. If this condition is not met, there will be an error.
@@ -365,4 +377,10 @@ free_resourceRecord(ResourceRecord_t *resourceRecord)
     free(resourceRecord);
 }
 
+void
+resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message)
+{
+    if (!resourceRecord) exit_with_error("Error in resourceRecord_to_message(): null pointer.");
+    
+}
 

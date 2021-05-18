@@ -10,15 +10,14 @@
 #include <netinet/in.h>
 #include "util.h"
 
-
-#define OPERATING_PORT 8053
-
 #define QUERY 0
 #define RESPONSE 1
 
 #define FULL_STOP '.'
 #define NULL_BYTE '\0'
 
+// A TCP message has 2-byte header indicating the length of the message that follows
+#define LENGTH_HEADER_SIZE 2
 // A DNS header is always of length 12
 #define HEADER_LENGTH 12
 
@@ -45,11 +44,13 @@ struct packet
 };
 
 
-Packet_t * receive_new_message();
+Packet_t * receive_new_message(int input_file_descriptor);
 
 Packet_t *new_packet(byte_t *raw_message, unsigned int data_length);
 
 Packet_t *parse_raw_message(Packet_t* packet);
+
+void packet_to_message(Packet_t *packet);
 
 void print_packet(Packet_t *packet);
 

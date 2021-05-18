@@ -5,8 +5,8 @@
 # BIN - binary
 CC=clang
 # CC=gcc
-HELPERS=util.o packet.o
-COPT=-Wall -Wpedantic -g -lpthread
+HELPERS=util.o packet.o server.o client.o cache.o 
+COPT=-Wall -Wpedantic -g # -lpthread
 BIN_PHASE1=phase1
 BIN_PHASE2=dns_svr
 
