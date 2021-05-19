@@ -79,11 +79,6 @@ parse_raw_message(Packet_t* packet)
     return packet;
 }
 
-void
-packet_to_message(Packet_t *packet)
-{
-    
-}
 
 /*  Prints all the contents of a Packet */
 void
@@ -456,4 +451,32 @@ void
 update_ID(Packet_t *packet, uint16_t ID)
 {
 
+}
+
+/*  Resets the header without changing the ID or the QDCOUNT. */
+void
+reset_header(Packet_t *packet)
+{
+    reset_query_parameters(packet);
+    // Here we are accessing all the bytes in the header except ID and QDCOUNT bytes
+    // and setting them all to 0.
+    packet->header->ANCOUNT = 0;
+    packet->raw_message[8] = packet->raw_message[8] & 0x0;
+    packet->raw_message[9] = packet->raw_message[9] & 0x0;
+
+    packet->header->NSCOUNT = 0;
+    packet->raw_message[10] = packet->raw_message[10] & 0x0;
+    packet->raw_message[11] = packet->raw_message[11] & 0x0;
+
+    packet->header->ARCOUNT = 0;
+    packet->raw_message[12] = packet->raw_message[12] & 0x0;
+    packet->raw_message[13] = packet->raw_message[13] & 0x0;
+}
+
+void
+reset_query_parameters(Packet_t *packet)
+{
+    static int QUERY_PARAMS_POS = 4;
+    packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] & 0x0;
+    packet->raw_message[QUERY_PARAMS_POS+1] = packet->raw_message[QUERY_PARAMS_POS+1] & 0x0;
 }

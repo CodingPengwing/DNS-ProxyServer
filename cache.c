@@ -67,19 +67,6 @@ replace_in_cache(Packet_t **cache, size_t cache_len, char *QNAME_evict, Packet_t
             return;
         }
     }
-
-    // for (size_t i = 0; i < cache_len; i++)
-    // {
-    //     if (!cache[i]) continue;
-    //     if (strcmp(cache[i]->question->QNAME, QNAME_evict) == 0) 
-    //     {
-    //         free_packet(cache[i]);
-    //         cache[i] = NULL;
-    //         update_cache(cache, cache_len);
-    //         put_in_cache(cache, cache_len, packet_insert);
-    //         return;
-    //     }
-    // }
 }
 
 size_t

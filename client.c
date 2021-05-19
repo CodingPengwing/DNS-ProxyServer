@@ -1,7 +1,7 @@
-// A simple client program for server.c
-// To compile: gcc client.c -o client
-// To run: start the server, then the client
 
+/*	
+This file is referenced from Practical 9 
+*/
 #include "client.h"
 
 Packet_t *

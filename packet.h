@@ -10,9 +10,7 @@
 #include <netinet/in.h>
 #include "util.h"
 
-#define QUERY 0
-#define RESPONSE 1
-
+#define RESPONSECODE 1
 #define FULL_STOP '.'
 #define NULL_BYTE '\0'
 
@@ -130,5 +128,10 @@ void free_resourceRecord(ResourceRecord_t *resourceRecord);
 void update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE);
 
 void update_RCODE(Packet_t *packet, uint8_t RCODE);
+
+/*  Resets the header without changing the ID or the QDCOUNT. */
+void reset_header(Packet_t *packet);
+
+void reset_query_parameters(Packet_t *packet);
 
 #endif
