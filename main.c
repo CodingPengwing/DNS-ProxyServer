@@ -72,7 +72,7 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
             reset_header(query);
             update_QUERYCODE(query, RESPONSECODE);
             update_RCODE(query, RCODE_ERROR);
-            write_to_client(clientfd, query->raw_message, query->length);
+            write_to_client(clientfd, query->raw_message, LENGTH_HEADER_SIZE+HEADER_SIZE+query->question->length);
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
             close(clientfd);
             free_packet(query);
