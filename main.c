@@ -26,14 +26,14 @@ int main(int argc, char* argv[])
     int socketfd = create_listening_socket(); 
     while (true)
     {
-        // int newsocketfd = accept_new_connection(socketfd);
+        int newsocketfd = accept_new_connection(socketfd);
         // pthread_t thread_id;
         // pthread_create(handle_query);
-        handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, CACHE_LEN, &cache_lock);
+        handle_query(newsocketfd, log_file, server_IP, server_port, cache, CACHE_LEN, &cache_lock);
         // Create new tid in linked_list
     }
 
-    // close(socketfd);
+    close(socketfd);
 
     // close thread and also free linked list node
 
@@ -70,6 +70,7 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
             write_to_client(clientfd, query->raw_message, query->length);
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
             fflush(log_file);
+            close(clientfd);
             return;
         }
 
@@ -98,6 +99,8 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         // finished using packets, free
         free_packet(query);
         free_packet(response);
+
+        close(clientfd);
         
         /* --> FINISH THREAD */
     }
