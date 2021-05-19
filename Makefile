@@ -3,8 +3,8 @@
 # HELPERS - compiled source files that should be linked
 # COPT - compiler flags
 # BIN - binary
-# CC=clang
-CC=gcc
+CC=clang
+# CC=gcc
 HELPERS=util.o packet.o server.o client.o cache.o
 CI_HELPERS=util.o packet.o client.o cache.o server.o
 COPT=-Wall -Wpedantic -g # -lpthread
