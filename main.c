@@ -69,10 +69,13 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         /* CHECK VALIDITY OF QUERY, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
         if (query->question->QTYPE != AAAA_TYPE) 
         {
+            int message_len = HEADER_SIZE;
+            query->raw_message[0] = 0x0;
+            query->raw_message[1] = message_len;
             reset_header(query);
             update_QUERYCODE(query, RESPONSECODE);
             update_RCODE(query, RCODE_ERROR);
-            write_to_client(clientfd, query->raw_message, LENGTH_HEADER_SIZE+HEADER_SIZE+query->question->length);
+            write_to_client(clientfd, query->raw_message, message_len + LENGTH_HEADER_SIZE);
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
             close(clientfd);
             free_packet(query);
@@ -93,7 +96,7 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         /* LOG THE RESPONSE */
         if (response->answer) 
         {
-            if (response->answer->TYPE == AAAA_TYPE)log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
+            if (response->answer->TYPE == AAAA_TYPE) log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
         }
         
         // println("BREAKPOINT 2");fflush(stdout);
@@ -123,25 +126,3 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
 }
 
 
-
-// READING FROM CLIENT
-// 	char buffer[256];
-// 	// Read characters from the connection, then process
-// 	int n = read(newsocketfd, buffer, 255); // n is number of characters read
-// 	if (n < 0) exit_with_error("Error in accept_new_connection(): read() failed.");
-
-// 	// Null-terminate string
-// 	buffer[n] = '\0';
-
-// 	// Write message back
-// 	printf("Here is the message: %s\n", buffer);
-// 	n = write(newsocketfd, "I got your message", 18);
-// 	if (n < 0) {
-// 		perror("write");
-// 		exit(EXIT_FAILURE);
-// 	}
-
-// 	close(socketfd);
-// 	close(newsocketfd);
-// 	return 0;
-// }

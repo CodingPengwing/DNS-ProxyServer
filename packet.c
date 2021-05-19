@@ -458,8 +458,12 @@ void
 reset_header(Packet_t *packet)
 {
     reset_query_parameters(packet);
-    // Here we are accessing all the bytes in the header except ID and QDCOUNT bytes
+    // Here we are accessing all the bytes in the header except ID bytes
     // and setting them all to 0.
+    packet->header->QDCOUNT = 0;
+    packet->raw_message[6] = packet->raw_message[6] & 0x0;
+    packet->raw_message[7] = packet->raw_message[7] & 0x0;
+
     packet->header->ANCOUNT = 0;
     packet->raw_message[8] = packet->raw_message[8] & 0x0;
     packet->raw_message[9] = packet->raw_message[9] & 0x0;
