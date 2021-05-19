@@ -1,6 +1,6 @@
 
-#ifndef H_CACHE
-#define H_CACHE
+#ifndef CAC_H
+#define CAC_H
 
 #include <stdlib.h>
 #include <stdio.h>
