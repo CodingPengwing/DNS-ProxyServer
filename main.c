@@ -99,8 +99,6 @@ sigint_handler(int file)
 void *
 handle_query(void *args)
 {
-    println("STARTING QUERY"); fflush(stdout);
-
     struct arg_struct *args_ = (struct arg_struct *) args;
     // Extract function arguments
     int clientfd = args_->clientfd;
@@ -132,20 +130,15 @@ handle_query(void *args)
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
             close(clientfd);
             free_packet(query);
-            return NULL;
+            return NULL; /* --> FINISH THREAD */   
         }
-
-        println("BREAKPOINT 1"); fflush(stdout);
-
-        // pthread_mutex_lock(cache_lock)
-
 
         pthread_mutex_lock(cache_lock);
         /*  Update records in cache */
         update_cache(cache, CACHE_SIZE, server_IP, server_port, log_file);
 
         /*  Check Cache for existing valid record, should return record if there's a match, else NULL */
-        /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY --> FINISH THREAD */
+        /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY */
         Packet_t *cached_packet = find_in_cache(cache, cache_len, query->question->QNAME);
         if (cached_packet) 
         {
@@ -164,19 +157,13 @@ handle_query(void *args)
             }
             free_packet(query);
             close(clientfd);
-            return NULL;
+            return NULL; /* --> FINISH THREAD */   
         }
         pthread_mutex_unlock(cache_lock);
 
-
-        println("BREAKPOINT 2");fflush(stdout);
-
-
-        // pthread_mutex_unlock(cache_lock)
         
         /* SEND QUERY TO SERVER, GET RESPONSE */
         Packet_t *response = ask_server(server_IP, server_port, query);
-
         /* LOG AND CACHE THE RESPONSE */
         if (response->header->ANCOUNT) 
         {
@@ -191,22 +178,15 @@ handle_query(void *args)
             }
             pthread_mutex_unlock(cache_lock);
         }
-        
-        println("BREAKPOINT 3");fflush(stdout);
 
         /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
         write_to_client(clientfd, response->raw_message, response->length);
 
-        // finished using packets, free
+        // finished using query, free
         free_packet(query);
-
-        // println("BREAKPOINT 4");fflush(stdout);
-
         close(clientfd);
-        
-        /* --> FINISH THREAD */
-        
     }
+    /* --> FINISH THREAD */     
     return NULL;
 }
 

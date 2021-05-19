@@ -20,6 +20,7 @@ all: $(BIN_MAIN)
 
 $(BIN_MAIN): main.c $(HELPERS)
 	$(CC) -o $(BIN_MAIN) main.c $(HELPERS) $(COPT) -lpthread
+	
 
 # Wildcard rule to make any .o file,
 # given a .c and .h file with the same leading filename component
