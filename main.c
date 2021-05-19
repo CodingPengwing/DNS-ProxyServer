@@ -31,8 +31,6 @@ int main(int argc, char* argv[])
     int socketfd = create_listening_socket(); 
     while (true)
     {
-        /*  Update records in cache */
-        update_cache(cache, CACHE_SIZE, server_IP, server_port);
         int newsocketfd = accept_new_connection(socketfd);
         // pthread_t thread_id;
         // pthread_create(handle_query);
@@ -87,6 +85,10 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
 
         // pthread_mutex_lock(cache_lock)
 
+
+        /*  Update records in cache */
+        update_cache(cache, CACHE_SIZE, server_IP, server_port, log_file);
+
         /*  Check Cache for existing valid record, should return record if there's a match, else NULL */
         /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY --> FINISH THREAD */
         Packet_t *cached_packet = find_in_cache(cache, cache_len, query->question->QNAME);
@@ -115,18 +117,18 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         
         /* SEND QUERY TO SERVER, GET RESPONSE */
         Packet_t *response = ask_server(server_IP, server_port, query);
-        Packet_t *evict = put_in_cache(cache, cache_len, response);
-        if (evict)
-        {
-            log_cache(log_file, CACHE_EVICTION, response->question->QNAME, evict->question->QNAME, 0);
-            free_packet(evict);
-        }
 
         // print_packet(response);
         /* LOG THE RESPONSE */
         if (response->header->ANCOUNT) 
         {
             if (response->answer->TYPE == AAAA_TYPE) log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
+            Packet_t *evict = put_in_cache(cache, cache_len, response);
+            if (evict)
+            {
+                log_cache(log_file, CACHE_EVICTION, response->question->QNAME, evict->question->QNAME, 0);
+                free_packet(evict);
+            }
         }
         
         // println("BREAKPOINT 2");fflush(stdout);

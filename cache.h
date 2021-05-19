@@ -18,7 +18,7 @@ void print_cache(Packet_t **cache, size_t cache_len);
 void free_cache(Packet_t **cache, size_t cache_len);
 
 
-void update_cache(Packet_t **cache, size_t cache_len, char *server_IP, char *server_port);
+void update_cache(Packet_t **cache, size_t cache_len, char *server_IP, char *server_port, FILE *log_file);
 
 Packet_t *put_in_cache(Packet_t **cache, size_t cache_len, Packet_t *packet);
 

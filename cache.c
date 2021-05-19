@@ -29,7 +29,7 @@ free_cache(Packet_t **cache, size_t cache_len)
 }
 
 void
-update_cache(Packet_t **cache, size_t cache_len, char *server_IP, char *server_port)
+update_cache(Packet_t **cache, size_t cache_len, char *server_IP, char *server_port, FILE *log_file)
 {
 
     if (num_empty_slots(cache, cache_len) == cache_len) return;
@@ -43,6 +43,7 @@ update_cache(Packet_t **cache, size_t cache_len, char *server_IP, char *server_p
             update_QUERYCODE(cache[i], QR_QUERY);
             update_RD(cache[i], true);
             cache[i] = ask_server(server_IP, server_port, cache[i]);
+            log_cache(log_file, CACHE_EVICTION, cache[i]->question->QNAME, tmp->question->QNAME, 0);
             free_packet(tmp);
         }
         else update_TTL(cache[i]);
