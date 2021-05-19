@@ -3,8 +3,8 @@
 
 # CC - compiler
 CC=clang
-# HELPERS - compiled source files that should be linked
-HELPERS=util.o packet.o server.o client.o cache.o
+# OBJ - compiled source files that should be linked
+OBJ=util.o packet.o server.o client.o cache.o
 # COPT - compiler flags
 COPT=-Wall -Wpedantic -g 
 # BIN - binary
@@ -18,9 +18,9 @@ all: $(BIN_MAIN)
 #     <tab>commands_to_make_target
 # (Note that spaces will not work.)
 
-$(BIN_MAIN): main.c $(HELPERS)
-	$(CC) -o $(BIN_MAIN) main.c $(HELPERS) $(COPT) -lpthread
-	
+$(BIN_MAIN): main.c $(OBJ)
+	$(CC) -o $(BIN_MAIN) main.c $(OBJ) $(COPT) -lpthread
+
 
 # Wildcard rule to make any .o file,
 # given a .c and .h file with the same leading filename component
