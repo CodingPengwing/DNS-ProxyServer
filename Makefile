@@ -5,7 +5,7 @@
 # BIN - binary
 CC=clang
 # CC=gcc
-HELPERS=util.o packet.o server.o client.o cache.o 
+HELPERS=util.o packet.o server.o client.o cache.o
 COPT=-Wall -Wpedantic -g # -lpthread
 BIN_PHASE1=phase1
 BIN_PHASE2=dns_svr
@@ -33,7 +33,7 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm $(HELPERS) dns_svr phase1 dns_svr.log
+	rm dns_svr
 
 run1:
 	./dns_svr < packets/1.comp30023.a.req.raw
