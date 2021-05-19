@@ -23,18 +23,18 @@ int main(int argc, char* argv[])
     char *server_IP = argv[1], *server_port = argv[2];
     // char server_IP[] = "192.168.1.1", server_port[] = "53";
 
-    // handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, CAC_LEN, &cache_lock);
+    handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, CAC_LEN, &cache_lock);
 
-    int socketfd = create_listening_socket(); 
-    while (true)
-    {
-        int newsocketfd = accept_new_connection(socketfd);
-        // pthread_t thread_id;
-        // pthread_create(handle_query);
-        handle_query(newsocketfd, log_file, server_IP, server_port, cache, CAC_LEN, &cache_lock);
-        // Create new tid in linked_list
-    }
-    close(socketfd);
+    // int socketfd = create_listening_socket(); 
+    // while (true)
+    // {
+    //     int newsocketfd = accept_new_connection(socketfd);
+    //     // pthread_t thread_id;
+    //     // pthread_create(handle_query);
+    //     handle_query(newsocketfd, log_file, server_IP, server_port, cache, CAC_LEN, &cache_lock);
+    //     // Create new tid in linked_list
+    // }
+    // close(socketfd);
 
     // close thread and also free linked list node
 
@@ -56,7 +56,7 @@ void
 handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock)
 {
     // println("STARTING QUERY"); fflush(stdout);
-    static int RESPONSECODE = 1;
+    static int RESPONSECODE = 0x1;
     static int RCODE_ERROR = 4;
     static int AAAA_TYPE = 0x1C;
     /* RECEIVE NEW QUERY */

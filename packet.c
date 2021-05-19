@@ -437,19 +437,19 @@ free_resourceRecord(ResourceRecord_t *resourceRecord)
 void
 update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE)
 {
-    size_t QUERY_PARAMS_POS = 5;
+    size_t QUERYCODE_POS = 4;
     if (packet->header) packet->header->QR = QUERYCODE;
-    if (QUERYCODE) packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] | 0x8000;
-    else packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] & 0x7FFF;
+    if (QUERYCODE) packet->raw_message[QUERYCODE_POS] = packet->raw_message[QUERYCODE_POS] | 0x80;
+    else packet->raw_message[QUERYCODE_POS] = packet->raw_message[QUERYCODE_POS] & 0x7F;
 }
 
 void
 update_RCODE(Packet_t *packet, uint8_t RCODE)
 {
-    size_t QUERY_PARAMS_POS = 5;
+    size_t RCODE_POS = 5;
     if (packet->header) packet->header->RCODE = RCODE;
-    packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] & 0xfff0;
-    packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] | RCODE;
+    packet->raw_message[RCODE_POS] = packet->raw_message[RCODE_POS] & 0xfff0;
+    packet->raw_message[RCODE_POS] = packet->raw_message[RCODE_POS] | RCODE;
 }
 
 void
