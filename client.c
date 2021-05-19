@@ -7,6 +7,8 @@
 Packet_t *
 ask_server(char *IP_addr, char *port, Packet_t *query)
 {
+
+	println("!#@$!@#$!#$!@$!#@$!@#$!@# ASKING SERVER"); fflush(stdout);
 	struct addrinfo hints, *servinfo, *rp;
 
 	// Create address
@@ -20,6 +22,7 @@ ask_server(char *IP_addr, char *port, Packet_t *query)
 		fprintf(stderr, "Error in ask_server(): getaddrinfo() - %s\n", gai_strerror(s));
 		exit(EXIT_FAILURE);
 	}
+
 
     int serverfd;
 	// Connect to first valid result
@@ -40,11 +43,15 @@ ask_server(char *IP_addr, char *port, Packet_t *query)
     int n = write(serverfd, query->raw_message, query->length);
     if (n < 0) exit_with_error("Error in ask_server(): write() failed");
 
+
     // Read message from server
-    Packet_t *response = receive_new_tcp_message(serverfd);
+    Packet_t *response = NULL;
+	while (!response) response = receive_new_tcp_message(serverfd);
 
     // Close the socket
 	close(serverfd);
+
+	println("!#@$!@#$!#$!@$!#@$!@#$!@# FINISHED ASKING SERVER"); fflush(stdout);
 
 	return response;
 }

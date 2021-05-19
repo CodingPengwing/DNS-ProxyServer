@@ -61,18 +61,19 @@ parse_raw_message(Packet_t* packet)
     // Determine whether this packet is a query or response.
     packet->type = packet->header->QR;
 
-
     if (!packet->header->QDCOUNT) exit_with_error("Error in parse_raw_message(): no questions.");
-    packet->question = new_question(raw_message + HEADER_SIZE);
+    raw_message += HEADER_SIZE;
+    packet->question = new_question(raw_message);
 
     // Look for the first answer
     if (packet->header->ANCOUNT)
     {
-        size_t question_length = 0;
-        question_length += packet->question->length;
-        packet->answer = new_resourceRecord(raw_message + HEADER_SIZE + question_length);
+        raw_message += packet->question->length;
+        packet->answer = new_resourceRecord(raw_message);
         packet->TTL = packet->answer->TTL;
     }
+    else packet->answer = NULL;
+
     packet->time_expire = packet->time_received + packet->TTL;
     
     return packet;
@@ -88,6 +89,7 @@ packet_to_message(Packet_t *packet)
 void
 print_packet(Packet_t *packet)
 {       
+    // println("PRINTPOINT 1");fflush(stdout);
     if (!packet) exit_with_error("Error in print_packet(): null pointer.");
     static int TIME_BUFFER_LEN = 80;
     char time_buffer[TIME_BUFFER_LEN];
@@ -102,23 +104,37 @@ print_packet(Packet_t *packet)
         convert_raw_time(time_buffer, TIME_BUFFER_LEN, packet->time_expire);
         printf("Time expire: %s", time_buffer); println("");
     }
+    // println("PRINTPOINT 2");fflush(stdout);
     // Print the message content
     double_byte_t message_length = packet->length;
     printf("Message length: %d\n", message_length);
     printf("Message content: ");
-    for (size_t i = 0; i < message_length; i++) 
+
+    // println("PRINTPOINT 3");fflush(stdout);
+
+    for (uint16_t i = 0; i < message_length; i++) 
     {
         print_byte_as_hexes(packet->raw_message[i]);
         if (i < message_length-1) printf(", ");
         else println("");
     } println("");
+
+    // println("PRINTPOINT 4");fflush(stdout);
     
     // Print the header
     print_header(packet->header); println("");
+
+    // println("PRINTPOINT 5");fflush(stdout);
+
     // Print the question
     print_question(packet->question); println("");
+
+    // println("PRINTPOINT 6");fflush(stdout);
+
     // Print the answer
     if (packet->answer) { print_resourceRecord(packet->answer); println(""); }
+
+    // println("PRINTPOINT 7");fflush(stdout);
 
     println("------------------");
     fflush(stdout);
@@ -262,13 +278,15 @@ new_question(byte_t *question_raw_message)
     size_t i = 0;
     // Get first byte (length octet) to know what length to read in next
     size_t bytes_to_read = (size_t) question_raw_message[i];
+    ++i;
+
     // malloc enough space for next domain name section
-    char *QNAME = (char*) malloc(bytes_to_read*sizeof(char));
+    char *QNAME = (char*) malloc((bytes_to_read+i)*sizeof(char));
     // start reading the bytes and parsing to char array QNAME
-    while (question_raw_message[++i])
+    while (question_raw_message[i])
     {
         // if we are in the middle of a domain name section
-        if (bytes_to_read)
+        if (bytes_to_read > 0)
         {   
             // parse data to array
             QNAME[i-1] = (char) question_raw_message[i];
@@ -277,14 +295,16 @@ new_question(byte_t *question_raw_message)
         // if we encountered a length octet
         else 
         {   
+            QNAME[i-1] = FULL_STOP;
             // determine the length of the next section
             bytes_to_read = (size_t) question_raw_message[i];
-            QNAME = (char*) realloc(QNAME, i + bytes_to_read);
-            QNAME[i-1] = FULL_STOP;
+            QNAME = (char*) realloc(QNAME, i + bytes_to_read + 1);
         }
+        i++;
     }
     QNAME[i-1] = NULL_BYTE;
     question->QNAME = QNAME;
+
     // Length of QNAME including null byte
     question->QNAME_length = i;
 
@@ -299,7 +319,7 @@ new_question(byte_t *question_raw_message)
     question->QTYPE = append_2_bytes(QTYPE_byte_1, QTYPE_byte_2);
     question->QCLASS = append_2_bytes(QCLASS_byte_1, QCLASS_byte_2);
     
-    // Combined length of QNAME (including null byte), QTYPE and QCLASS. (ie. total length of the question section)
+    // Total length of the question section
     question->length = i;
     return question;
 }
@@ -351,7 +371,7 @@ new_resourceRecord(byte_t *resourceRecord_raw_message)
 
     // Skip the first 12 bytes we just read in
     resourceRecord_raw_message += 12;
-    if (resourceRecord->RDLENGTH)
+    if (resourceRecord->RDLENGTH != 0)
     {
         resourceRecord->RDATA = (byte_t*) malloc(resourceRecord->RDLENGTH * sizeof(byte_t));
         for (int i = 0; i < resourceRecord->RDLENGTH; i++) resourceRecord->RDATA[i] = resourceRecord_raw_message[i];
@@ -381,7 +401,7 @@ void
 free_resourceRecord(ResourceRecord_t *resourceRecord)
 {
     if (!resourceRecord) exit_with_error("Error in free_resourceRecord(): null pointer.");
-    free(resourceRecord->RDATA);
+    if (resourceRecord->RDLENGTH) free(resourceRecord->RDATA);
     free(resourceRecord);
 }
 

@@ -55,6 +55,7 @@ sigint_handler(int file)
 void
 handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock)
 {
+    // println("STARTING QUERY"); fflush(stdout);
     static int RESPONSECODE = 1;
     static int RCODE_ERROR = 4;
     static int AAAA_TYPE = 0x1C;
@@ -76,7 +77,9 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
             close(clientfd);
             return;
         }
-        
+
+        // println("BREAKPOINT 1"); fflush(stdout);
+
         // pthread_mutex_lock(cache_lock)
         /*  Check Cache for expired records */
         /*  Check Cache for existing valid record, should return record if there's a match, else NULL */
@@ -85,12 +88,14 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         
         /* SEND QUERY TO SERVER, GET RESPONSE */
         Packet_t *response = ask_server(server_IP, server_port, query);
+        print_packet(response);
         /* LOG THE RESPONSE */
         if (response->answer) 
         {
             if (response->answer->TYPE == AAAA_TYPE)log_request(log_file, REPLY, response->question->QNAME, response->answer->IP_address);
         }
         
+        // println("BREAKPOINT 2");fflush(stdout);
 
         // pthread_mutex_lock(cache_lock)
         /* UPDATE CACHE */
@@ -99,15 +104,21 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
         write_to_client(clientfd, response->raw_message, response->length);
 
+        // println("BREAKPOINT 3");fflush(stdout);
+
         // finished using packets, free
         free_packet(query);
+
+        // println("BREAKPOINT 4");fflush(stdout);
         free_packet(response);
 
         close(clientfd);
+
+        // println("done loop");fflush(stdout);
         
         /* --> FINISH THREAD */
     }
-
+    // println("ENDING QUERY");fflush(stdout);
 }
 
 

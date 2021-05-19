@@ -40,6 +40,9 @@ clean:
 clean_local:
 	rm dns_svr *.o *.log
 
+run:
+	./dns_svr 128.250.66.5 53
+
 run1:
 	./dns_svr < packets/1.comp30023.a.req.raw
 run2:
