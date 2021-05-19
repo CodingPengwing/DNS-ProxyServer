@@ -86,7 +86,7 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         /* LOG THE RESPONSE */
         if (response->answer) 
         {
-            if (response->answer->TYPE == AAAA_TYPE) log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
+            log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
         }
         
 
