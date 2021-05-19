@@ -55,7 +55,6 @@ convert_raw_time(char *time_buffer, size_t buffer_length, time_t raw_time)
 void
 log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address)
 {
-    println("START LOG");
     // Get the current timestamp
     static int TIME_BUFFER_SIZE = 80;
     char current_timestamp[TIME_BUFFER_SIZE];
