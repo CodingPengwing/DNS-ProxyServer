@@ -35,23 +35,34 @@ struct arg_struct {
     pthread_mutex_t *cache_lock;
 };
 
+/*  Handles a SIGINT */
 void sigint_handler(int sig);
-// void handle_query(int socketfd, FILE *log_file, char *server_IP, char *server_port, Packet_t **cache, size_t cache_len, pthread_mutex_t *cache_lock);
+
+/*  Handles a query at the clientfd, based on the rest of the given args */
 void *handle_query(void *args);
+
 
 int main(int argc, char* argv[]) 
 {
+    // handle SIGINT if detected.
     signal(SIGINT, sigint_handler);
+    // Log file
     FILE *log_file = fopen(LOG_FILE, "w");
+    // Cache object
     Packet_t **cache = create_cache();
+    // Cache lock to make sure multiple threads don't access the cache at the same time.
     pthread_mutex_t cache_lock;
+    // upstream server info
     char *server_IP = argv[1], *server_port = argv[2];
 
+    // Create a socket and listen
     int socketfd = create_listening_socket(); 
     while (true)
     {
+        // Accept a new connection when possible.
         int newsocketfd = accept_new_connection(socketfd);
-
+ 
+        // Create arguments for the handle_query() function
         struct arg_struct args;
         args.clientfd = newsocketfd;
         args.log_file = log_file;
@@ -61,10 +72,9 @@ int main(int argc, char* argv[])
         args.cache_len = CACHE_SIZE;
         args.cache_lock = &cache_lock;
 
+        // create a thread in order to not block the main function
         pthread_t thread_id;
         pthread_create(&thread_id, NULL, handle_query, (void *)&args);
-        // handle_query(newsocketfd, log_file, server_IP, server_port, cache, CACHE_SIZE, &cache_lock);
-        // Create new tid in linked_list
     }
     close(socketfd);
     fclose(log_file);
@@ -74,6 +84,7 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
+/*  handles a SIGINT */
 void
 sigint_handler(int file)
 {
@@ -84,8 +95,7 @@ sigint_handler(int file)
     exit(EXIT_SUCCESS);
 }
 
-// void
-// handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, Packet_t **cache, size_t cache_len, pthread_mutex_t *cache_lock)
+/*  Handles a query at the clientfd, based on the rest of the given args */
 void *
 handle_query(void *args)
 {
