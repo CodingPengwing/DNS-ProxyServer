@@ -23,6 +23,7 @@ create a DNS server that receives and responds to DNS queries.
 #define CACHE_SIZE 5
 #define LOG_FILE "dns_svr.log"
 
+// https://stackoverflow.com/questions/1352749/multiple-arguments-to-function-called-by-pthread-create
 /*  This struct is used to pass arguments into the handle_query() function, in order to make use of multithreading. */
 struct arg_struct {
     int clientfd;
