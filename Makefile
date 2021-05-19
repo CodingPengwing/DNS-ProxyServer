@@ -20,7 +20,7 @@ all: $(BIN_PHASE1) $(BIN_PHASE2)
 # (Note that spaces will not work.)
 
 $(BIN_PHASE2): main.c $(HELPERS)
-	$(CC) -o $(BIN_PHASE2) main.c $(HELPERS) $(COPT)
+	$(CC) -o $(BIN_PHASE2) main.c $(HELPERS) $(COPT) -lpthread
 
 # $(BIN_PHASE1): phase1.c $(HELPERS)
 # 	$(CC) -o $(BIN_PHASE1) phase1.c $(HELPERS) $(COPT)
