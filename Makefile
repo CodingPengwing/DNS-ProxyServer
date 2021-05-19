@@ -6,7 +6,7 @@
 CC=clang
 # CC=gcc
 HELPERS=util.o packet.o server.o client.o cache.o
-CI_HELPERS=util packet client cache server
+CI_HELPERS=./util.o ./packet.o ./client.o ./cache.o ./server.o
 COPT=-Wall -Wpedantic -g # -lpthread
 # BIN_PHASE1=phase1
 BIN_PHASE2=dns_svr

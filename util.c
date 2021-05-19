@@ -69,7 +69,7 @@ log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address)
             fprintf(fp, "%s unimplemented request\n", current_timestamp);
             fflush(fp);
             break;
-        case RESPONSE:
+        case REPLY:
             if (!req_domain_name || !IP_address) exit_with_error("Error in log_request(): case RESPONSE, not enough arguments provided.");
             fprintf(fp, "%s %s is at %s\n", current_timestamp, req_domain_name, IP_address);
             fflush(fp);

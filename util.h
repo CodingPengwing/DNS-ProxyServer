@@ -11,7 +11,7 @@
 typedef uint8_t byte_t;
 typedef uint16_t double_byte_t;
 typedef uint32_t quad_byte_t;
-typedef enum {REQUEST, UNIMPLEMENTED_REQUEST, CACHE_EXPIRY, CACHE_EVICTION, RESPONSE} log_t;
+typedef enum {REQUEST, UNIMPLEMENTED_REQUEST, CACHE_EXPIRY, CACHE_EVICTION, REPLY} log_t;
 
 
 /*  Prints a message to stderr then exits with failure code 1. */

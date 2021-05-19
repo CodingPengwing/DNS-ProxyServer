@@ -23,17 +23,19 @@ int main(int argc, char* argv[])
     char *server_IP = argv[1], *server_port = argv[2];
     // char server_IP[] = "192.168.1.1", server_port[] = "53";
 
-    int socketfd = create_listening_socket(); 
-    while (true)
-    {
-        int newsocketfd = accept_new_connection(socketfd);
-        // pthread_t thread_id;
-        // pthread_create(handle_query);
-        handle_query(newsocketfd, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
-        // Create new tid in linked_list
-    }
+    handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
 
-    close(socketfd);
+    // int socketfd = create_listening_socket(); 
+    // while (true)
+    // {
+    //     int newsocketfd = accept_new_connection(socketfd);
+    //     // pthread_t thread_id;
+    //     // pthread_create(handle_query);
+    //     handle_query(newsocketfd, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
+    //     // Create new tid in linked_list
+    // }
+
+    // close(socketfd);
 
     // close thread and also free linked list node
 
@@ -61,7 +63,6 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
     {
         print_packet(query);
         log_request(log_file, REQUEST, query->question->QNAME, NULL);
-        fflush(log_file);
 
         /* CHECK VALIDITY OF QUERY, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
         if (query->question->QTYPE != AAAA_TYPE) 
@@ -69,11 +70,10 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
             update_RCODE(query, RCODE_ERROR);
             write_to_client(clientfd, query->raw_message, query->length);
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
-            fflush(log_file);
             close(clientfd);
             return;
         }
-
+        
         // pthread_mutex_lock(cache_lock)
         /*  Check Cache for expired records */
         /*  Check Cache for existing valid record, should return record if there's a match, else NULL */
