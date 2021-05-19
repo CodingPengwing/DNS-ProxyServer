@@ -19,8 +19,8 @@ int main(int argc, char* argv[])
     FILE *log_file = fopen("dns_svr.log", "w");
     Packet_t *cache[CACHE_LEN];
     pthread_mutex_t cache_lock;
-    // char *server_IP = argv[1], *server_port = argv[2];
-    char server_IP[] = "127.0.0.1", server_port[] = "8053";
+    char *server_IP = argv[1], *server_port = argv[2];
+    // char server_IP[] = "127.0.0.1", server_port[] = "8053";
 
     int socketfd = create_listening_socket(); 
     while (true)
