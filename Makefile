@@ -33,8 +33,9 @@ $(BIN_PHASE2): main.c $(HELPERS)
 format:
 	clang-format -i *.c *.h
 
+.PHONY: clean
 clean:
-	rm dns_svr *.o
+	rm -rf dns_svr *.o *.log
 
 clean_local:
 	rm dns_svr *.o *.log
