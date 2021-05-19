@@ -23,19 +23,18 @@ int main(int argc, char* argv[])
     char *server_IP = argv[1], *server_port = argv[2];
     // char server_IP[] = "192.168.1.1", server_port[] = "53";
 
-    handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
+    // handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
 
-    // int socketfd = create_listening_socket(); 
-    // while (true)
-    // {
-    //     int newsocketfd = accept_new_connection(socketfd);
-    //     // pthread_t thread_id;
-    //     // pthread_create(handle_query);
-    //     handle_query(newsocketfd, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
-    //     // Create new tid in linked_list
-    // }
-
-    // close(socketfd);
+    int socketfd = create_listening_socket(); 
+    while (true)
+    {
+        int newsocketfd = accept_new_connection(socketfd);
+        // pthread_t thread_id;
+        // pthread_create(handle_query);
+        handle_query(newsocketfd, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
+        // Create new tid in linked_list
+    }
+    close(socketfd);
 
     // close thread and also free linked list node
 
@@ -44,9 +43,11 @@ int main(int argc, char* argv[])
 }
 
 void
-sigint_handler(int sig)
+sigint_handler(int file)
 {
     close(LISTENING_PORT);
+    FILE *log_file = fopen("dns_svr.log", "a");
+    fclose(log_file);
     println("\n----- Hey there! Thanks for marking my assignment. Hope you have a nice day and stay hydrated! -----");
     exit(EXIT_SUCCESS);
 }
