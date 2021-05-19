@@ -6,11 +6,12 @@
 #include "util.h"
 #include "packet.h"
 #include "server.h"
+#include "client.h"
 
 #define CACHE_LEN 5
 
 void sigint_handler(int sig);
-void handle_query(int socketfd, FILE *log_file, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_log);
+void handle_query(int socketfd, FILE *log_file, char *server_IP, char *server_port, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock);
 
 int main(int argc, char* argv[]) 
 {
@@ -18,6 +19,8 @@ int main(int argc, char* argv[])
     FILE *log_file = fopen("dns_svr.log", "w");
     Packet_t *cache[CACHE_LEN];
     pthread_mutex_t cache_lock;
+    // char *server_IP = argv[1], *server_port = argv[2];
+    char server_IP[] = "127.0.0.1", server_port[] = "8053";
 
     int socketfd = create_listening_socket(); 
     while (true)
@@ -25,7 +28,7 @@ int main(int argc, char* argv[])
         // int newsocketfd = accept_new_connection(socketfd);
         // pthread_t thread_id;
         // pthread_create(handle_query);
-        handle_query(STDIN_FILENO, log_file, cache, CACHE_LEN, &cache_lock);
+        handle_query(STDIN_FILENO, log_file, server_IP, server_port, cache, CACHE_LEN, &cache_lock);
         // Create new tid in linked_list
     }
 
@@ -46,23 +49,24 @@ sigint_handler(int sig)
 }
 
 void
-handle_query(int socketfd, FILE *log_file, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock)
+handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock)
 {
     static int RCODE_ERROR = 4;
+    static int AAAA_TYPE = 0x1C;
     /* RECEIVE NEW QUERY */
-    Packet_t *packet = receive_new_tcp_message(socketfd);
+    Packet_t *query = receive_new_tcp_message(clientfd);
 
-    if (packet)
+    if (query)
     {
-        print_packet(packet);
-        log_request(log_file, REQUEST, packet->question->QNAME, NULL);
+        print_packet(query);
+        log_request(log_file, REQUEST, query->question->QNAME, NULL);
         fflush(log_file);
 
-        /* CHECK VALIDITY OF PACKET, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
-        if (packet->question->QTYPE != 0x1C) 
+        /* CHECK VALIDITY OF QUERY, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
+        if (query->question->QTYPE != AAAA_TYPE) 
         {
-            update_RCODE(packet, RCODE_ERROR);
-            write_to_client(socketfd, packet->raw_message, packet->length);
+            update_RCODE(query, RCODE_ERROR);
+            write_to_client(clientfd, query->raw_message, query->length);
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
             fflush(log_file);
             return;
@@ -74,18 +78,22 @@ handle_query(int socketfd, FILE *log_file, Packet_t *cache[], size_t cache_len, 
         // pthread_mutex_unlock(cache_lock)
         /* IF THERE IS A VALID MATCHING EXISTING RECORD, SEND BACK STRAIGHT AWAY --> FINISH THREAD */
         
-        /* CREATE SOCKET CONNECTION WITH SERVER */
         /* SEND QUERY TO SERVER, GET RESPONSE */
+        Packet_t *response = ask_server(server_IP, server_port, query);
         /* LOG THE RESPONSE */
+        if (response->answer) log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
+        
 
         // pthread_mutex_lock(cache_lock)
         /* UPDATE CACHE */
         // pthread_mutex_unlock(cache_lock)
 
         /* RELAY THE SERVER'S RESPONSE TO THE ORIGINAL QUERIER */
+        write_to_client(clientfd, response->raw_message, response->length);
 
-        // finished using packet, free it
-        free_packet(packet);
+        // finished using packets, free
+        free_packet(query);
+        free_packet(response);
         
         /* --> FINISH THREAD */
     }

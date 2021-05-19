@@ -17,7 +17,7 @@ ask_server(char *IP_addr, char *port, Packet_t *query)
 	// Get addrinfo of server. 
 	int s = getaddrinfo(IP_addr, port, &hints, &servinfo);
 	if (s != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+		fprintf(stderr, "Error in ask_server(): getaddrinfo() - %s\n", gai_strerror(s));
 		exit(EXIT_FAILURE);
 	}
 
@@ -33,10 +33,7 @@ ask_server(char *IP_addr, char *port, Packet_t *query)
 
 		close(serverfd);
 	}
-	if (rp == NULL) {
-		fprintf(stderr, "client: failed to connect\n");
-		exit(EXIT_FAILURE);
-	}
+	if (rp == NULL) exit_with_error("Error in ask_server(): client failed to connect.");
 	freeaddrinfo(servinfo);
 
     // Send message to server

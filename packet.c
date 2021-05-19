@@ -7,20 +7,20 @@
 Packet_t * 
 receive_new_tcp_message(int input_file_descriptor)
 {   
+    // try to read initial 2 bytes
     byte_t *raw_data = (byte_t*)malloc(LENGTH_HEADER_SIZE*sizeof(byte_t));
     size_t bytes_read = 0;
     while (bytes_read < LENGTH_HEADER_SIZE)
         bytes_read += read(input_file_descriptor, &raw_data[bytes_read], sizeof(byte_t));
 
-    //  If failed to read
+    //  If failed to read, return
     if (bytes_read < 0) return NULL;
 
+    // Otherwise read the entire message
     double_byte_t message_length = append_2_bytes(raw_data[0], raw_data[1]);
     message_length += LENGTH_HEADER_SIZE;
-
     raw_data = realloc(raw_data, message_length*sizeof(byte_t));
-
-    // Read until all the bytes for the packet are received
+    // Read until all the bytes for the packet have been received
     while (bytes_read < message_length) 
         bytes_read += read(input_file_descriptor, &raw_data[bytes_read], sizeof(byte_t));
 
