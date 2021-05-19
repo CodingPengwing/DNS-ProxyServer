@@ -351,12 +351,14 @@ new_resourceRecord(byte_t *resourceRecord_raw_message)
 
     // Skip the first 12 bytes we just read in
     resourceRecord_raw_message += 12;
-    resourceRecord->RDATA = (byte_t*) malloc(resourceRecord->RDLENGTH * sizeof(byte_t));
-    for (int i = 0; i < resourceRecord->RDLENGTH; i++) resourceRecord->RDATA[i] = resourceRecord_raw_message[i];
-    
-    if (inet_ntop(AF_INET6, resourceRecord->RDATA, resourceRecord->IP_address, INET6_ADDRSTRLEN) == NULL)
-        exit_with_error("Error in new_resourceRecord(): failed to convert RDATA to IP address.");
-
+    if (resourceRecord->RDATA)
+    {
+        resourceRecord->RDATA = (byte_t*) malloc(resourceRecord->RDLENGTH * sizeof(byte_t));
+        for (int i = 0; i < resourceRecord->RDLENGTH; i++) resourceRecord->RDATA[i] = resourceRecord_raw_message[i];
+        
+        if (inet_ntop(AF_INET6, resourceRecord->RDATA, resourceRecord->IP_address, INET6_ADDRSTRLEN) == NULL)
+            exit_with_error("Error in new_resourceRecord(): failed to convert RDATA to IP address.");
+    }
     return resourceRecord;
 }
 
