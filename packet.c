@@ -412,14 +412,26 @@ free_resourceRecord(ResourceRecord_t *resourceRecord)
 // }
 
 
+void
+update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE)
+{
+    size_t QUERY_PARAMS_POS = 5;
+    if (packet->header) packet->header->QR = QUERYCODE;
+    if (QUERYCODE) packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] | 0x8000;
+    else packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] & 0x7FFF;
+}
 
 void
 update_RCODE(Packet_t *packet, uint8_t RCODE)
 {
-    // packet->header->RCODE = RCODE;
     size_t QUERY_PARAMS_POS = 5;
     if (packet->header) packet->header->RCODE = RCODE;
     packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] & 0xfff0;
     packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] | RCODE;
 }
 
+void
+update_ID(Packet_t *packet, uint16_t ID)
+{
+
+}

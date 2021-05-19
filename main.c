@@ -55,6 +55,7 @@ sigint_handler(int file)
 void
 handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock)
 {
+    static int RESPONSECODE = 1;
     static int RCODE_ERROR = 4;
     static int AAAA_TYPE = 0x1C;
     /* RECEIVE NEW QUERY */
@@ -68,6 +69,7 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         /* CHECK VALIDITY OF QUERY, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
         if (query->question->QTYPE != AAAA_TYPE) 
         {
+            update_QUERYCODE(query, RESPONSECODE);
             update_RCODE(query, RCODE_ERROR);
             write_to_client(clientfd, query->raw_message, query->length);
             log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);

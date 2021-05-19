@@ -127,6 +127,7 @@ void resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message
 
 void free_resourceRecord(ResourceRecord_t *resourceRecord);
 
+void update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE);
 
 void update_RCODE(Packet_t *packet, uint8_t RCODE);
 

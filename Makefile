@@ -34,10 +34,10 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm dns_svr $(CI_HELPERS)
+	rm dns_svr *.o
 
 clean_local:
-	rm dns_svr $(HELPERS)
+	rm dns_svr *.o *.log
 
 run1:
 	./dns_svr < packets/1.comp30023.a.req.raw
