@@ -41,8 +41,7 @@ ask_server(char *IP_addr, char *port, Packet_t *query)
     if (n < 0) exit_with_error("Error in ask_server(): write() failed");
 
     // Read message from server
-    Packet_t *response = NULL;
-	while (!response) response = receive_new_tcp_message(serverfd);
+    Packet_t *response = receive_new_tcp_message(serverfd);
 
     // Close the socket
 	close(serverfd);
