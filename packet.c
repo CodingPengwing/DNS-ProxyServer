@@ -5,29 +5,35 @@
     creates a Packet object and returns it. 
 */
 Packet_t * 
-receive_new_message(int input_file_descriptor)
+receive_new_tcp_message(int input_file_descriptor)
 {   
-    double_byte_t message_length;
-    if (read(input_file_descriptor, &message_length, 2*sizeof(byte_t)))
-    {   
-        message_length = ntohs(message_length);
+    byte_t *raw_data = (byte_t*)malloc(LENGTH_HEADER_SIZE*sizeof(byte_t));
+    size_t bytes_read = 0;
+    while (bytes_read < LENGTH_HEADER_SIZE)
+        bytes_read += read(input_file_descriptor, &raw_data[bytes_read], sizeof(byte_t));
 
-        byte_t *raw_data = (byte_t*)malloc(message_length*sizeof(byte_t));
-        // Read until all the bytes for the packet are received
-        unsigned int bytes_read = 0;
-        while (bytes_read < message_length) 
-            bytes_read += read(input_file_descriptor, &raw_data[bytes_read], 1*sizeof(byte_t));
+    //  If failed to read
+    if (bytes_read < 0) return NULL;
 
-        // Here all the bytes have been received, we can parse the packet
-        Packet_t *packet = new_packet(raw_data, message_length);
-        return packet;
-    }
+    double_byte_t message_length = append_2_bytes(raw_data[0], raw_data[1]);
+    message_length += LENGTH_HEADER_SIZE;
+
+    raw_data = realloc(raw_data, message_length*sizeof(byte_t));
+
+    // Read until all the bytes for the packet are received
+    while (bytes_read < message_length) 
+        bytes_read += read(input_file_descriptor, &raw_data[bytes_read], sizeof(byte_t));
+
+    // Here all the bytes have been received, we can parse the packet
+    Packet_t *packet = new_packet(raw_data, message_length);
+    return packet;
+    
     return NULL;
 }
 
 /*  Creates a new Packet object that holds a raw_message and the length of that raw message. */
 Packet_t *
-new_packet(byte_t *raw_message, unsigned int length)
+new_packet(byte_t *raw_message, size_t length)
 {
     Packet_t *packet = (Packet_t*) malloc(sizeof(*packet));
     if (!packet) exit_with_error("Error in new_packet(): failed malloc.");
@@ -47,21 +53,24 @@ parse_raw_message(Packet_t* packet)
 {
     if (!packet) exit_with_error("Error in parse_raw_message(): null pointer.");
     if (!packet->raw_message) exit_with_error("Error in parse_raw_message(): no raw_message in packet.");
-    byte_t *raw_message = packet->raw_message;
+    // Skip the first 2 bytes because of length header bytes
+    byte_t *raw_message = packet->raw_message + LENGTH_HEADER_SIZE;
+
     Header_t *header = new_header(raw_message);
     packet->header = header;
     // Determine whether this packet is a query or response.
     packet->type = packet->header->QR;
 
+
     if (!packet->header->QDCOUNT) exit_with_error("Error in parse_raw_message(): no questions.");
-    packet->question = new_question(raw_message + HEADER_LENGTH);
+    packet->question = new_question(raw_message + HEADER_SIZE);
 
     // Look for the first answer
     if (packet->header->ANCOUNT)
     {
-        unsigned int question_length = 0;
+        size_t question_length = 0;
         question_length += packet->question->length;
-        packet->answer = new_resourceRecord(raw_message + HEADER_LENGTH + question_length);
+        packet->answer = new_resourceRecord(raw_message + HEADER_SIZE + question_length);
         packet->TTL = packet->answer->TTL;
     }
     packet->time_expire = packet->time_received + packet->TTL;
@@ -94,10 +103,10 @@ print_packet(Packet_t *packet)
         printf("Time expire: %s", time_buffer); println("");
     }
     // Print the message content
-    unsigned int message_length = packet->length;
+    double_byte_t message_length = packet->length;
     printf("Message length: %d\n", message_length);
     printf("Message content: ");
-    for (unsigned int i = 0; i < message_length; i++) 
+    for (size_t i = 0; i < message_length; i++) 
     {
         print_byte_as_hexes(packet->raw_message[i]);
         if (i < message_length-1) printf(", ");
@@ -111,8 +120,7 @@ print_packet(Packet_t *packet)
     // Print the answer
     if (packet->answer) print_resourceRecord(packet->answer); println("");
 
-    println("--------------------");
-
+    println("------------------");
     fflush(stdout);
 }
 
@@ -126,8 +134,6 @@ free_packet(Packet_t *packet)
     free_question(packet->question);
     if (packet->answer) free_resourceRecord(packet->answer);
 }
-
-
 
 
 
@@ -253,9 +259,9 @@ new_question(byte_t *question_raw_message)
     if (!question) exit_with_error("Error in new_question(): failed malloc.");
 
     // Read the QNAME
-    unsigned int i = 0;
+    size_t i = 0;
     // Get first byte (length octet) to know what length to read in next
-    unsigned int bytes_to_read = (unsigned int) question_raw_message[i];
+    size_t bytes_to_read = (size_t) question_raw_message[i];
     // malloc enough space for next domain name section
     char *QNAME = (char*) malloc(bytes_to_read*sizeof(char));
     // start reading the bytes and parsing to char array QNAME
@@ -272,7 +278,7 @@ new_question(byte_t *question_raw_message)
         else 
         {   
             // determine the length of the next section
-            bytes_to_read = (unsigned int) question_raw_message[i];
+            bytes_to_read = (size_t) question_raw_message[i];
             QNAME = (char*) realloc(QNAME, i + bytes_to_read);
             QNAME[i-1] = FULL_STOP;
         }
@@ -307,7 +313,7 @@ print_question(Question_t *question)
     printf("%s, ", question->QNAME);
     printf("QTYPE: %X, ", question->QTYPE);
     printf("QCLASS: %X, ", question->QCLASS);
-    printf("Length: %d", question->length);
+    printf("Length: %d", (int)question->length);
     fflush(stdout);
 }
 
@@ -377,10 +383,43 @@ free_resourceRecord(ResourceRecord_t *resourceRecord)
     free(resourceRecord);
 }
 
-void
-resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message)
-{
-    if (!resourceRecord) exit_with_error("Error in resourceRecord_to_message(): null pointer.");
+// // Writes the resourceRecord data into the message field as raw data, this function does not malloc
+// // but assumes that the message has been properly allocated memory
+// void
+// resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message)
+// {
+//     if (!resourceRecord) exit_with_error("Error in resourceRecord_to_message(): null pointer.");
+//     message[0] = 0xC0;
+//     message[1] = 0x0C;
+//     message[2] = get_1st_byte_from_double_byte(resourceRecord->TYPE);
+//     message[3] = get_2nd_byte_from_double_byte(resourceRecord->TYPE);
+//     message[4] = get_1st_byte_from_double_byte(resourceRecord->CLASS);
+//     message[5] = get_2nd_byte_from_double_byte(resourceRecord->CLASS);
+//     double_byte_t TTL_1 = get_1st_double_byte_from_quad_byte(resourceRecord->TTL);
+//     double_byte_t TTL_2 = get_2nd_double_byte_from_quad_byte(resourceRecord->TTL);
+//     message[6] = get_1st_byte_from_double_byte(TTL_1);
+//     message[7] = get_2nd_byte_from_double_byte(TTL_1);
+//     message[8] = get_1st_byte_from_double_byte(TTL_2);
+//     message[9] = get_2nd_byte_from_double_byte(TTL_2);
+//     message[10] = get_1st_byte_from_double_byte(resourceRecord->RDLENGTH);
+//     message[11] = get_2nd_byte_from_double_byte(resourceRecord->RDLENGTH);
     
+//     message += 12;
+//     for (size_t i = 0; i < resourceRecord->RDLENGTH; i++)
+//     {
+//         message[i] = resourceRecord->RDATA[i];
+//     }
+// }
+
+
+
+void
+update_RCODE(Packet_t *packet, uint8_t RCODE)
+{
+    // packet->header->RCODE = RCODE;
+    size_t QUERY_PARAMS_POS = 5;
+    if (packet->header) packet->header->RCODE = RCODE;
+    packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] & 0xfff0;
+    packet->raw_message[QUERY_PARAMS_POS] = packet->raw_message[QUERY_PARAMS_POS] | RCODE;
 }
 

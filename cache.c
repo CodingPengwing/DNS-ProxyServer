@@ -2,10 +2,10 @@
 #include "cache.h"
 
 void
-update_cache(Packet_t **cache, unsigned int cache_len)
+update_cache(Packet_t **cache, size_t cache_len)
 {
     time_t current_time = get_current_time_raw();
-    for (unsigned int i = 0; i < cache_len; i++)
+    for (size_t i = 0; i < cache_len; i++)
     {
         if (!cache[i]) continue;
         if (current_time > cache[i]->time_expire)
@@ -19,7 +19,7 @@ update_cache(Packet_t **cache, unsigned int cache_len)
 }
 
 void
-put_in_cache(Packet_t **cache, unsigned int cache_len, Packet_t *packet)
+put_in_cache(Packet_t **cache, size_t cache_len, Packet_t *packet)
 {
     update_cache(cache, cache_len);
     // free last accessed resource in cache
@@ -29,7 +29,7 @@ put_in_cache(Packet_t **cache, unsigned int cache_len, Packet_t *packet)
         cache[cache_len-1] = NULL;
     }
     reformat_cache(cache, cache_len);
-    for (unsigned int i = cache_len-1; i >= 0; i--)
+    for (size_t i = cache_len-1; i >= 0; i--)
     {
         if (!cache[i])
         {
@@ -40,10 +40,10 @@ put_in_cache(Packet_t **cache, unsigned int cache_len, Packet_t *packet)
 }
 
 Packet_t *
-find_in_cache(Packet_t **cache, unsigned int cache_len, char *QNAME)
+find_in_cache(Packet_t **cache, size_t cache_len, char *QNAME)
 {
     update_cache(cache, cache_len);
-    for (unsigned int i = 0; i < cache_len; i++)
+    for (size_t i = 0; i < cache_len; i++)
     {
         if (!cache[i]) continue;
         if (strcmp(cache[i]->question->QNAME, QNAME) == 0) return cache[i];
@@ -52,11 +52,11 @@ find_in_cache(Packet_t **cache, unsigned int cache_len, char *QNAME)
 }
 
 void
-replace_in_cache(Packet_t **cache, unsigned int cache_len, char *QNAME_evict, Packet_t *packet_insert)
+replace_in_cache(Packet_t **cache, size_t cache_len, char *QNAME_evict, Packet_t *packet_insert)
 {
     Packet_t *evict = find_in_cache(cache, cache_len, QNAME_evict);
     if (!evict) exit_with_error("Error in replace_in_cache(): QNAME_evict does not exist.");
-    for (unsigned int i = 0; i < cache_len; i++)
+    for (size_t i = 0; i < cache_len; i++)
     {
         if (cache[i] == evict)
         {
@@ -68,7 +68,7 @@ replace_in_cache(Packet_t **cache, unsigned int cache_len, char *QNAME_evict, Pa
         }
     }
 
-    // for (unsigned int i = 0; i < cache_len; i++)
+    // for (size_t i = 0; i < cache_len; i++)
     // {
     //     if (!cache[i]) continue;
     //     if (strcmp(cache[i]->question->QNAME, QNAME_evict) == 0) 
@@ -82,11 +82,11 @@ replace_in_cache(Packet_t **cache, unsigned int cache_len, char *QNAME_evict, Pa
     // }
 }
 
-unsigned int
-num_empty_slots(Packet_t **cache, unsigned int cache_len)
+size_t
+num_empty_slots(Packet_t **cache, size_t cache_len)
 {
-    unsigned int count = 0;
-    for (unsigned int i = 0; i < cache_len; i++)
+    size_t count = 0;
+    for (size_t i = 0; i < cache_len; i++)
     {
         if (!cache[i]) ++count;
     }
@@ -94,9 +94,9 @@ num_empty_slots(Packet_t **cache, unsigned int cache_len)
 }
 
 void
-reformat_cache(Packet_t **cache, unsigned int cache_len)
+reformat_cache(Packet_t **cache, size_t cache_len)
 {
-    for (unsigned int i = cache_len-1; i > 0; i--) 
+    for (size_t i = cache_len-1; i > 0; i--) 
     {
         if (!cache[i])
         {

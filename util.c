@@ -16,6 +16,7 @@ println(char *message)
     printf("%s\n", message);
 }
 
+// https://www.tutorialspoint.com/c_standard_library/c_function_localtime.htm#:~:text=The%20C%20library%20function%20struct,in%20the%20local%20time%20zone
 /*  Get the current time in raw time_t format. */
 time_t
 get_current_time_raw()
@@ -26,17 +27,19 @@ get_current_time_raw()
     return raw_time;
 }
 
+// https://www.tutorialspoint.com/c_standard_library/c_function_localtime.htm#:~:text=The%20C%20library%20function%20struct,in%20the%20local%20time%20zone
 /*  Get the current time in readable time format. */
 void
-get_current_timestamp(char *time_buffer, unsigned int buffer_length)
+get_current_timestamp(char *time_buffer, size_t buffer_length)
 {
     time_t raw_time = get_current_time_raw();
     convert_raw_time(time_buffer, buffer_length, raw_time);
 }
 
+// https://www.tutorialspoint.com/c_standard_library/c_function_localtime.htm#:~:text=The%20C%20library%20function%20struct,in%20the%20local%20time%20zone
 /*  Converts a raw time into the specified time format and fills the string time_buffer. */
 void
-convert_raw_time(char *time_buffer, unsigned int buffer_length, time_t raw_time)
+convert_raw_time(char *time_buffer, size_t buffer_length, time_t raw_time)
 {
     // Compute the localtime by using the raw_time value
     struct tm *info = localtime(&raw_time);
@@ -49,10 +52,10 @@ void
 log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address)
 {
     // Get the current timestamp
-    static int TIME_BUFFER_LEN = 80;
-    char current_timestamp[TIME_BUFFER_LEN];
+    static int TIME_BUFFER_SIZE = 80;
+    char current_timestamp[TIME_BUFFER_SIZE];
     time_t current_time_raw = get_current_time_raw();
-    convert_raw_time(current_timestamp, TIME_BUFFER_LEN, current_time_raw);
+    convert_raw_time(current_timestamp, TIME_BUFFER_SIZE, current_time_raw);
     
     // Log the item
     switch (log_type)
@@ -80,10 +83,10 @@ void
 log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_name, char *cache_expiry_timestamp)
 {
     // Get the current timestamp
-    static int TIME_BUFFER_LEN = 80;
-    char current_timestamp[TIME_BUFFER_LEN];
+    static int TIME_BUFFER_SIZE = 80;
+    char current_timestamp[TIME_BUFFER_SIZE];
     time_t current_time_raw = get_current_time_raw();
-    convert_raw_time(current_timestamp, TIME_BUFFER_LEN, current_time_raw);
+    convert_raw_time(current_timestamp, TIME_BUFFER_SIZE, current_time_raw);
     
     // Log the item
     switch (log_type)
@@ -164,6 +167,22 @@ get_2nd_byte_from_double_byte(double_byte_t double_byte)
     return result;
 }
 
+double_byte_t
+get_1st_double_byte_from_quad_byte(quad_byte_t quad_byte)
+{
+    int by_16_bits = 16;
+    double_byte_t result = quad_byte >> by_16_bits;
+    return result;
+}
+
+double_byte_t
+get_2nd_double_byte_from_quad_byte(quad_byte_t quad_byte)
+{
+    int by_16_bits = 16;
+    quad_byte = quad_byte << by_16_bits;
+    double_byte_t result = quad_byte >> by_16_bits;
+    return result;
+}
 
 
 void 

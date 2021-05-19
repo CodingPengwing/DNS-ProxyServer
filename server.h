@@ -18,4 +18,6 @@ int create_listening_socket();
 
 int accept_new_connection(int socketfd);
 
+void write_to_client(int socketfd, byte_t *message, size_t message_len);
+
 #endif

@@ -6,8 +6,6 @@
 // To compile: gcc server.c -o server
 // Reference: Beej's networking guide, man pages
 
-
-
 int
 create_listening_socket()
 {
@@ -15,7 +13,7 @@ create_listening_socket()
 
     // Create address we're going to listen on (with given port number)
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET6;       // IPv6
+	hints.ai_family = AF_INET;      // IPv6
 	hints.ai_socktype = SOCK_STREAM; // TCP
 	hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
 
@@ -51,11 +49,8 @@ create_listening_socket()
 	// incoming connection requests will be queued, man 3 listen
 	if (listen(socketfd, 15) < 0) exit_with_error("Error in create_listening_socket(): listen() failed.");
 
-;
-
     return socketfd;    
 }
-
 
 
 int accept_new_connection(int socketfd)
@@ -70,4 +65,8 @@ int accept_new_connection(int socketfd)
     return newsocketfd;
 }
 
-
+void write_to_client(int socketfd, byte_t *message, size_t message_len)
+{
+	size_t n = write(socketfd, message, message_len);
+	if (n < 0) exit_with_error("Error in write_to_client(): write() failed.");
+}

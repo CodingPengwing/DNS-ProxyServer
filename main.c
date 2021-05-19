@@ -10,7 +10,7 @@
 #define CACHE_LEN 5
 
 void sigint_handler(int sig);
-void handle_query(int socketfd, FILE *log_file, Packet_t *cache[], unsigned int cache_len, pthread_mutex_t *cache_log);
+void handle_query(int socketfd, FILE *log_file, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_log);
 
 int main(int argc, char* argv[]) 
 {
@@ -23,9 +23,10 @@ int main(int argc, char* argv[])
     while (true)
     {
         // int newsocketfd = accept_new_connection(socketfd);
+        // pthread_t thread_id;
+        // pthread_create(handle_query);
         handle_query(STDIN_FILENO, log_file, cache, CACHE_LEN, &cache_lock);
         // Create new tid in linked_list
-        // pthread_create(handle_query);
     }
 
     // close(socketfd);
@@ -45,10 +46,11 @@ sigint_handler(int sig)
 }
 
 void
-handle_query(int socketfd, FILE *log_file, Packet_t *cache[], unsigned int cache_len, pthread_mutex_t *cache_lock)
+handle_query(int socketfd, FILE *log_file, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock)
 {
+    static int RCODE_ERROR = 4;
     /* RECEIVE NEW QUERY */
-    Packet_t *packet = receive_new_message(socketfd);
+    Packet_t *packet = receive_new_tcp_message(socketfd);
 
     if (packet)
     {
@@ -56,8 +58,16 @@ handle_query(int socketfd, FILE *log_file, Packet_t *cache[], unsigned int cache
         log_request(log_file, REQUEST, packet->question->QNAME, NULL);
         fflush(log_file);
 
-        /* CHECK VALIDITY OF PACKET, IF INVALID, SEND BACK ERROR CODE 4 STRAIGHT AWAY --> FINISH THREAD */
-        
+        /* CHECK VALIDITY OF PACKET, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
+        if (packet->question->QTYPE != 0x1C) 
+        {
+            update_RCODE(packet, RCODE_ERROR);
+            write_to_client(socketfd, packet->raw_message, packet->length);
+            log_request(log_file, UNIMPLEMENTED_REQUEST, NULL, NULL);
+            fflush(log_file);
+            return;
+        }
+
         // pthread_mutex_lock(cache_lock)
         /*  Check Cache for expired records */
         /*  Check Cache for existing valid record, should return record if there's a match, else NULL */

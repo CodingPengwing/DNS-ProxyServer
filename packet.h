@@ -19,7 +19,7 @@
 // A TCP message has 2-byte header indicating the length of the message that follows
 #define LENGTH_HEADER_SIZE 2
 // A DNS header is always of length 12
-#define HEADER_LENGTH 12
+#define HEADER_SIZE 12
 
 
 typedef struct packet Packet_t;
@@ -31,8 +31,8 @@ typedef struct resourceRecord ResourceRecord_t;
 struct packet 
 {
     byte_t *raw_message;
-    unsigned int length;
-    unsigned int type;
+    size_t length;
+    byte_t type;
     time_t time_received;
     time_t TTL;
     time_t time_expire;
@@ -44,9 +44,9 @@ struct packet
 };
 
 
-Packet_t * receive_new_message(int input_file_descriptor);
+Packet_t * receive_new_tcp_message(int input_file_descriptor);
 
-Packet_t *new_packet(byte_t *raw_message, unsigned int data_length);
+Packet_t *new_packet(byte_t *raw_message, size_t data_length);
 
 Packet_t *parse_raw_message(Packet_t* packet);
 
@@ -91,9 +91,9 @@ void free_header(Header_t *header);
 
 struct question 
 {
-    unsigned int length;
+    size_t length;
     char *QNAME;
-    unsigned int QNAME_length;
+    size_t QNAME_length;
     double_byte_t QTYPE;
     double_byte_t QCLASS;
 };
@@ -108,7 +108,7 @@ void free_question(Question_t *question);
 
 struct resourceRecord
 {
-    unsigned int length;
+    size_t length;
     double_byte_t NAME;
     double_byte_t TYPE;
     double_byte_t CLASS;
@@ -123,7 +123,11 @@ ResourceRecord_t *new_resourceRecord(byte_t *resourceRecord_raw_message);
 
 void print_resourceRecord(ResourceRecord_t *resourceRecord);
 
+void resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message);
+
 void free_resourceRecord(ResourceRecord_t *resourceRecord);
 
+
+void update_RCODE(Packet_t *packet, uint8_t RCODE);
 
 #endif
