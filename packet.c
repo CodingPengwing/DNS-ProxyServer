@@ -433,24 +433,82 @@ void
 update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE)
 {
     size_t QUERYCODE_POS = 4;
-    if (packet->header) packet->header->QR = QUERYCODE;
-    if (QUERYCODE) packet->raw_message[QUERYCODE_POS] = packet->raw_message[QUERYCODE_POS] | 0x80;
-    else packet->raw_message[QUERYCODE_POS] = packet->raw_message[QUERYCODE_POS] & 0x7F;
+    if (QUERYCODE) 
+    {
+        packet->raw_message[QUERYCODE_POS] = packet->raw_message[QUERYCODE_POS] | 0x80;
+        packet->header->QR = true;
+    }
+    else 
+    {
+        packet->raw_message[QUERYCODE_POS] = packet->raw_message[QUERYCODE_POS] & 0x7F;
+        packet->header->QR = false;
+    }
 }
 
 void
 update_RCODE(Packet_t *packet, uint8_t RCODE)
 {
     size_t RCODE_POS = 5;
-    if (packet->header) packet->header->RCODE = RCODE;
+    packet->header->RCODE = RCODE;
     packet->raw_message[RCODE_POS] = packet->raw_message[RCODE_POS] & 0xfff0;
     packet->raw_message[RCODE_POS] = packet->raw_message[RCODE_POS] | RCODE;
 }
 
 void
-update_ID(Packet_t *packet, uint16_t ID)
+update_RD(Packet_t *packet, uint8_t RD)
 {
+    size_t RD_POS = 4;
+    if (RD) 
+    {
+        packet->raw_message[RD_POS] = packet->raw_message[RD_POS] | 0x1;
+        packet->header->RD = true;
+    }
+    else 
+    {
+        packet->raw_message[RD_POS] = packet->raw_message[RD_POS] & 0xFE;
+        packet->header->RD = false;
+    }
+}
 
+void
+update_ID(Packet_t *packet, byte_t ID_byte_1, byte_t ID_byte_2)
+{
+    // Bytes at index 2 and 3 of the raw_message are ID field bytes
+    size_t ID_POS = 2;
+    packet->raw_message[ID_POS] = ID_byte_1;
+    packet->raw_message[ID_POS+1] = ID_byte_2;
+    packet->header->ID = append_2_bytes(ID_byte_1, ID_byte_2);
+}
+
+void
+update_TTL(Packet_t *packet)
+{
+    if (!packet->header->ANCOUNT) return;
+    time_t current_time = get_current_time_raw();
+    packet->TTL = packet->time_expire - current_time;
+    int TTL_POS = LENGTH_HEADER_SIZE + HEADER_SIZE + packet->question->length;
+    // TTL starts at the 7th byte of the answer section and takes up 4 bytes
+    TTL_POS += 6;
+    if (packet->TTL > 0)
+    {
+        double_byte_t TTL_1 = get_1st_double_byte_from_quad_byte(packet->TTL);
+        double_byte_t TTL_2 = get_2nd_double_byte_from_quad_byte(packet->TTL);
+        byte_t byte_1 = get_1st_byte_from_double_byte(TTL_1);
+        byte_t byte_2 = get_2nd_byte_from_double_byte(TTL_1);
+        byte_t byte_3 = get_1st_byte_from_double_byte(TTL_2);
+        byte_t byte_4 = get_2nd_byte_from_double_byte(TTL_2);
+        packet->raw_message[TTL_POS] = byte_1;
+        packet->raw_message[TTL_POS+1] = byte_2;
+        packet->raw_message[TTL_POS+2] = byte_3;
+        packet->raw_message[TTL_POS+3] = byte_4;
+    }
+    else
+    {
+        packet->raw_message[TTL_POS] = 0;
+        packet->raw_message[TTL_POS+1] = 0;
+        packet->raw_message[TTL_POS+2] = 0;
+        packet->raw_message[TTL_POS+3] = 0;
+    }
 }
 
 /*  Resets the header without changing the ID or the QDCOUNT. */

@@ -28,7 +28,7 @@ void convert_raw_time(char *time_buffer, size_t buffer_length, time_t raw_time);
 
 void log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address);
 
-void log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_name, char *cache_expiry_timestamp);
+void log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_name, time_t cache_expiry_time);
 
 
 double_byte_t append_2_bytes(byte_t byte_1, byte_t byte_2);

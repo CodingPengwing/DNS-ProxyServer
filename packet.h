@@ -10,9 +10,12 @@
 #include <netinet/in.h>
 #include "util.h"
 
-#define RESPONSECODE 1
+#define QR_QUERY 0
+#define QR_RESPONSE 1
 #define FULL_STOP '.'
 #define NULL_BYTE '\0'
+#define RCODE_ERROR 4
+#define AAAA_TYPE 0x1C
 
 // A TCP message has 2-byte header indicating the length of the message that follows
 #define LENGTH_HEADER_SIZE 2
@@ -125,9 +128,19 @@ void resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message
 
 void free_resourceRecord(ResourceRecord_t *resourceRecord);
 
+
+
+
+
 void update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE);
 
 void update_RCODE(Packet_t *packet, uint8_t RCODE);
+
+void update_RD(Packet_t *packet, uint8_t RD);
+
+void update_ID(Packet_t *packet, byte_t ID_byte_1, byte_t ID_byte_2);
+
+void update_TTL(Packet_t *packet);
 
 /*  Resets the header without changing the ID or the QDCOUNT. */
 void reset_header(Packet_t *packet);

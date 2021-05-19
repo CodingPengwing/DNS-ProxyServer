@@ -8,7 +8,7 @@ Packet_t *
 ask_server(char *IP_addr, char *port, Packet_t *query)
 {
 
-	println("!#@$!@#$!#$!@$!#@$!@#$!@# ASKING SERVER"); fflush(stdout);
+	// println("!#@$!@#$!#$!@$!#@$!@#$!@# ASKING SERVER"); fflush(stdout);
 	struct addrinfo hints, *servinfo, *rp;
 
 	// Create address
@@ -51,7 +51,7 @@ ask_server(char *IP_addr, char *port, Packet_t *query)
     // Close the socket
 	close(serverfd);
 
-	println("!#@$!@#$!#$!@$!#@$!@#$!@# FINISHED ASKING SERVER"); fflush(stdout);
+	// println("!#@$!@#$!#$!@$!#@$!@#$!@# FINISHED ASKING SERVER"); fflush(stdout);
 
 	return response;
 }

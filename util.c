@@ -84,11 +84,12 @@ log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address)
 
 /*  Logs an event that is related to cache. */
 void
-log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_name, char *cache_expiry_timestamp)
+log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_name, time_t cache_expiry_time)
 {
     // Get the current timestamp
     static int TIME_BUFFER_SIZE = 80;
     char current_timestamp[TIME_BUFFER_SIZE];
+    char expiry_timestamp[TIME_BUFFER_SIZE];
     time_t current_time_raw = get_current_time_raw();
     convert_raw_time(current_timestamp, TIME_BUFFER_SIZE, current_time_raw);
     
@@ -96,8 +97,9 @@ log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_na
     switch (log_type)
     {
         case CACHE_EXPIRY:
-            if (!req_domain_name || !cache_expiry_timestamp)  exit_with_error("Error in log_cache(): case CACHE_EXPIRY, not enough arguments provided.");
-            fprintf(fp, "%s %s expires at %s\n", current_timestamp, req_domain_name, cache_expiry_timestamp);
+            if (!req_domain_name || !cache_expiry_time)  exit_with_error("Error in log_cache(): case CACHE_EXPIRY, not enough arguments provided.");
+            convert_raw_time(expiry_timestamp, TIME_BUFFER_SIZE, cache_expiry_time);
+            fprintf(fp, "%s %s expires at %s\n", current_timestamp, req_domain_name, expiry_timestamp);
             fflush(fp);
             break;
         case CACHE_EVICTION:
