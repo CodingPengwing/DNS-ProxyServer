@@ -6,8 +6,9 @@
 CC=clang
 # CC=gcc
 HELPERS=util.o packet.o server.o client.o cache.o
+CI_HELPERS=./util.o ./packet.o ./client.o ./cache.o ./server.o
 COPT=-Wall -Wpedantic -g # -lpthread
-BIN_PHASE1=phase1
+# BIN_PHASE1=phase1
 BIN_PHASE2=dns_svr
 
 # Running "make" with no argument will make the first target in the file
@@ -21,8 +22,8 @@ all: $(BIN_PHASE1) $(BIN_PHASE2)
 $(BIN_PHASE2): main.c $(HELPERS)
 	$(CC) -o $(BIN_PHASE2) main.c $(HELPERS) $(COPT)
 
-$(BIN_PHASE1): phase1.c $(HELPERS)
-	$(CC) -o $(BIN_PHASE1) phase1.c $(HELPERS) $(COPT)
+# $(BIN_PHASE1): phase1.c $(HELPERS)
+# 	$(CC) -o $(BIN_PHASE1) phase1.c $(HELPERS) $(COPT)
 
 # Wildcard rule to make any .o file,
 # given a .c and .h file with the same leading filename component
@@ -33,7 +34,10 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm dns_svr
+	rm ./dns_svr $(CI_HELPERS)
+
+clean_local:
+	rm dns_svr $(HELPERS)
 
 run1:
 	./dns_svr < packets/1.comp30023.a.req.raw
