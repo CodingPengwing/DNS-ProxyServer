@@ -1,3 +1,7 @@
+/*
+File created by Hoang Dang (1080344) Melbourne University 2021.
+This file contains functions for bit manipulation, bug prevention and general purpose debugging.
+*/
 
 #include "util.h"
 

@@ -1,4 +1,7 @@
-
+/*
+File created by Hoang Dang (1080344) Melbourne University 2021.
+This file contains functions and structures for DNS packets.
+*/
 #include "packet.h"
 
 /*  Checks stdin for an incoming message. When a message has been fully received,
@@ -99,13 +102,11 @@ print_packet(Packet_t *packet)
         convert_raw_time(time_buffer, TIME_BUFFER_LEN, packet->time_expire);
         printf("Time expire: %s", time_buffer); println("");
     }
-    // println("PRINTPOINT 2");fflush(stdout);
+
     // Print the message content
     double_byte_t message_length = packet->length;
     printf("Message length: %d\n", message_length);
     printf("Message content: ");
-
-    // println("PRINTPOINT 3");fflush(stdout);
 
     for (uint16_t i = 0; i < message_length; i++) 
     {
@@ -113,23 +114,15 @@ print_packet(Packet_t *packet)
         if (i < message_length-1) printf(", ");
         else println("");
     } println("");
-
-    // println("PRINTPOINT 4");fflush(stdout);
     
     // Print the header
     print_header(packet->header); println("");
 
-    // println("PRINTPOINT 5");fflush(stdout);
-
     // Print the question
     print_question(packet->question); println("");
 
-    // println("PRINTPOINT 6");fflush(stdout);
-
     // Print the answer
     if (packet->answer) { print_resourceRecord(packet->answer); println(""); }
-
-    // println("PRINTPOINT 7");fflush(stdout);
 
     println("------------------");
     fflush(stdout);
@@ -400,33 +393,6 @@ free_resourceRecord(ResourceRecord_t *resourceRecord)
     free(resourceRecord);
 }
 
-// // Writes the resourceRecord data into the message field as raw data, this function does not malloc
-// // but assumes that the message has been properly allocated memory
-// void
-// resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message)
-// {
-//     if (!resourceRecord) exit_with_error("Error in resourceRecord_to_message(): null pointer.");
-//     message[0] = 0xC0;
-//     message[1] = 0x0C;
-//     message[2] = get_1st_byte_from_double_byte(resourceRecord->TYPE);
-//     message[3] = get_2nd_byte_from_double_byte(resourceRecord->TYPE);
-//     message[4] = get_1st_byte_from_double_byte(resourceRecord->CLASS);
-//     message[5] = get_2nd_byte_from_double_byte(resourceRecord->CLASS);
-//     double_byte_t TTL_1 = get_1st_double_byte_from_quad_byte(resourceRecord->TTL);
-//     double_byte_t TTL_2 = get_2nd_double_byte_from_quad_byte(resourceRecord->TTL);
-//     message[6] = get_1st_byte_from_double_byte(TTL_1);
-//     message[7] = get_2nd_byte_from_double_byte(TTL_1);
-//     message[8] = get_1st_byte_from_double_byte(TTL_2);
-//     message[9] = get_2nd_byte_from_double_byte(TTL_2);
-//     message[10] = get_1st_byte_from_double_byte(resourceRecord->RDLENGTH);
-//     message[11] = get_2nd_byte_from_double_byte(resourceRecord->RDLENGTH);
-    
-//     message += 12;
-//     for (size_t i = 0; i < resourceRecord->RDLENGTH; i++)
-//     {
-//         message[i] = resourceRecord->RDATA[i];
-//     }
-// }
 
 
 void

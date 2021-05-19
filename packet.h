@@ -1,3 +1,7 @@
+/*
+File created by Hoang Dang (1080344) Melbourne University 2021.
+This file contains functions and structures for DNS packets.
+*/
 
 #ifndef PACKET_H
 #define PACKET_H
@@ -29,6 +33,7 @@ typedef struct question Question_t;
 typedef struct resourceRecord ResourceRecord_t;
 
 
+/*  This structure is used to parse and hold the different elements of a DNS message. */
 struct packet 
 {
     byte_t *raw_message;
@@ -44,21 +49,23 @@ struct packet
     // Additional
 };
 
-
+/*  Reads a new DNS message from the given file descriptor and creates a new Packet struct. */
 Packet_t * receive_new_tcp_message(int input_file_descriptor);
 
+/*  Creates a new Packet struct from the given raw_message (in bytes) */
 Packet_t *new_packet(byte_t *raw_message, size_t data_length);
 
+/*  Parses all the fields of a DNS message into Packet struct fields for ease of use. */
 Packet_t *parse_raw_message(Packet_t* packet);
 
-void packet_to_message(Packet_t *packet);
-
+/*  Prints all the contents of a Packet. */
 void print_packet(Packet_t *packet);
 
+/*  Frees all the contents of a Packet. */
 void free_packet(Packet_t* packet);
 
 
-
+/*  A Header structure to represent a DNS header section. */
 struct header 
 {
     double_byte_t ID;
@@ -78,18 +85,19 @@ struct header
     double_byte_t ARCOUNT;
 };
 
-/*  
-    This function creates a new header, it assumes that the raw data given has length of 12 bytes
-    as specified by RFC2535. If this condition is not met, there will be an error.
+/*  Creates a new Header struct. This function assumes that the raw data given has length of 
+    12 bytes as specified by RFC2535. If this condition is not met, there will be an error.
 */
 Header_t *new_header(byte_t *header_raw_message);
 
+/*  Prints all the contents of a Header struct. */ 
 void print_header(Header_t *header);
 
+/*  Frees a Header struct */
 void free_header(Header_t *header);
 
 
-
+/*  A Question structure to represent a DNS question section. */
 struct question 
 {
     size_t length;
@@ -106,7 +114,9 @@ void print_question(Question_t *question);
 void free_question(Question_t *question);
 
 
-
+/*  A ResourceRecord structure to represent a DNS resource record section. 
+    (answer/additional record/authoritative record) 
+*/
 struct resourceRecord
 {
     size_t length;
@@ -119,32 +129,37 @@ struct resourceRecord
     char IP_address[INET6_ADDRSTRLEN];
 };
 
-
+/*  Creates a new ResourceRecord structure. */
 ResourceRecord_t *new_resourceRecord(byte_t *resourceRecord_raw_message);
 
+/*  Prints all the contents of a Resource Record. */
 void print_resourceRecord(ResourceRecord_t *resourceRecord);
 
-void resourceRecord_to_message(ResourceRecord_t *resourceRecord, byte_t *message);
-
+/*  Frees all the contents of a Resource Record. */
 void free_resourceRecord(ResourceRecord_t *resourceRecord);
 
 
 
 
-
+/*  Updates the QR field in the query parameters of the Header section of the packet. */
 void update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE);
 
+/*  Updates the RCODE field in the query parameters of the Header section of the packet. */
 void update_RCODE(Packet_t *packet, uint8_t RCODE);
 
+/*  Updates the RD field in the query parameters of the Header section of the packet. */
 void update_RD(Packet_t *packet, uint8_t RD);
 
+/*  Updates the ID field of the Header section of the packet. */
 void update_ID(Packet_t *packet, byte_t ID_byte_1, byte_t ID_byte_2);
 
+/*  Updates the TTL field in the answer section of the packet. */
 void update_TTL(Packet_t *packet);
 
-/*  Resets the header without changing the ID or the QDCOUNT. */
+/*  Resets the header without changing the ID (sets everything else to 0). */
 void reset_header(Packet_t *packet);
 
+/*  Resets the query parameters of a Header section (sets everything to 0). */
 void reset_query_parameters(Packet_t *packet);
 
 #endif

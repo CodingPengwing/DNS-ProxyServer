@@ -1,3 +1,11 @@
+/*
+Program created by Hoang Dang (1080344), Melbourne University, 2021, as a solution to
+project 2 of Computer Systems Comp30023. 
+This file contains the main function that calls upon functions from other modules to
+create a DNS server that receives and responds to DNS queries. 
+*/
+
+
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <unistd.h>

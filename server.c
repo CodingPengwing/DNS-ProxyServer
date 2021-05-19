@@ -1,10 +1,10 @@
+/*
+This file is referenced from Lab 9 of the Computer Systems COMP30023 unit, Melbourne University, 2021.
+This file contains functions to act as a server and provide connections to clients.
+*/
 
 #include "server.h"
 
-// A simple server in the internet domain using TCP
-// The port number is passed as an argument
-// To compile: gcc server.c -o server
-// Reference: Beej's networking guide, man pages
 
 int
 create_listening_socket()
@@ -13,7 +13,7 @@ create_listening_socket()
 
     // Create address we're going to listen on (with given port number)
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET;      // IPv6
+	hints.ai_family = AF_INET;      // IPv4
 	hints.ai_socktype = SOCK_STREAM; // TCP
 	hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
 
@@ -41,9 +41,6 @@ create_listening_socket()
         exit_with_error("Error in create_listening_socket(): bind() failed.");
 
 	freeaddrinfo(res);
-
-    // // Set the socket to NON-BLOCKING
-    // if (fcntl(socketfd, F_SETFD, O_NONBLOCK) < 0) exit_with_error("Error in create_listening_socket(): fcntl() failed.");
 
 	// Listen on socket - means we're ready to accept connections,
 	// incoming connection requests will be queued, man 3 listen

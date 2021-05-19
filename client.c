@@ -1,7 +1,8 @@
-
-/*	
-This file is referenced from Practical 9 
+/*
+This file is referenced from Lab 9 of the Computer Systems COMP30023 unit, Melbourne University, 2021.
+This file contains functions to connect with an upstream server as a client.
 */
+
 #include "client.h"
 
 Packet_t *
