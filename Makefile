@@ -6,7 +6,7 @@
 CC=clang
 # CC=gcc
 HELPERS=util.o packet.o server.o client.o cache.o
-CI_HELPERS=./util.o ./packet.o ./client.o ./cache.o ./server.o
+CI_HELPERS=util packet client cache server
 COPT=-Wall -Wpedantic -g # -lpthread
 # BIN_PHASE1=phase1
 BIN_PHASE2=dns_svr
@@ -34,7 +34,7 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm ./dns_svr $(CI_HELPERS)
+	rm dns_svr $(CI_HELPERS)
 
 clean_local:
 	rm dns_svr $(HELPERS)

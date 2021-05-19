@@ -9,7 +9,7 @@
 #include "server.h"
 #include "client.h"
 
-#define CACHE_LEN 5
+#define LEN_CACHE 5
 
 void sigint_handler(int sig);
 void handle_query(int socketfd, FILE *log_file, char *server_IP, char *server_port, Packet_t *cache[], size_t cache_len, pthread_mutex_t *cache_lock);
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 {
     signal(SIGINT, sigint_handler);
     FILE *log_file = fopen("dns_svr.log", "w");
-    Packet_t *cache[CACHE_LEN];
+    Packet_t *cache[LEN_CACHE];
     pthread_mutex_t cache_lock;
     // char *server_IP = argv[1], *server_port = argv[2];
     char server_IP[] = "192.168.1.1", server_port[] = "53";
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
         int newsocketfd = accept_new_connection(socketfd);
         // pthread_t thread_id;
         // pthread_create(handle_query);
-        handle_query(newsocketfd, log_file, server_IP, server_port, cache, CACHE_LEN, &cache_lock);
+        handle_query(newsocketfd, log_file, server_IP, server_port, cache, LEN_CACHE, &cache_lock);
         // Create new tid in linked_list
     }
 

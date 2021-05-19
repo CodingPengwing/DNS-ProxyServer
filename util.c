@@ -63,13 +63,16 @@ log_request(FILE *fp, log_t log_type, char *req_domain_name, char *IP_address)
         case REQUEST:
             if (!req_domain_name) exit_with_error("Error in log_request(): case REQUEST, not enough arguments provided.");
             fprintf(fp, "%s requested %s\n", current_timestamp, req_domain_name);
+            fflush(fp);            
             break;
         case UNIMPLEMENTED_REQUEST:
             fprintf(fp, "%s unimplemented request\n", current_timestamp);
+            fflush(fp);
             break;
         case RESPONSE:
             if (!req_domain_name || !IP_address) exit_with_error("Error in log_request(): case RESPONSE, not enough arguments provided.");
             fprintf(fp, "%s %s is at %s\n", current_timestamp, req_domain_name, IP_address);
+            fflush(fp);
             break;
         default:
             exit_with_error("Error in log_request(): invalid log type.");
@@ -94,10 +97,12 @@ log_cache(FILE *fp, log_t log_type, char *req_domain_name, char *evict_domain_na
         case CACHE_EXPIRY:
             if (!req_domain_name || !cache_expiry_timestamp)  exit_with_error("Error in log_cache(): case CACHE_EXPIRY, not enough arguments provided.");
             fprintf(fp, "%s %s expires at %s\n", current_timestamp, req_domain_name, cache_expiry_timestamp);
+            fflush(fp);
             break;
         case CACHE_EVICTION:
             if (!req_domain_name || !evict_domain_name) exit_with_error("Error in log_cache(): case REQUEST, not enough arguments provided.");
             fprintf(fp, "%s replacing %s by %s\n", current_timestamp, evict_domain_name, req_domain_name);
+            fflush(fp);
             break;
         default:
             exit_with_error("Error in log_cache(): invalid log type.");
