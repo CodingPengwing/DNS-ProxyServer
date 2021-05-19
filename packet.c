@@ -14,7 +14,7 @@ receive_new_tcp_message(int input_file_descriptor)
         bytes_read += read(input_file_descriptor, &raw_data[bytes_read], sizeof(byte_t));
 
     //  If failed to read, return
-    if (bytes_read < 0) return NULL;
+    if (bytes_read <= 0) return NULL;
 
     // Otherwise read the entire message
     double_byte_t message_length = append_2_bytes(raw_data[0], raw_data[1]);
