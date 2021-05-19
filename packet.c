@@ -351,7 +351,7 @@ new_resourceRecord(byte_t *resourceRecord_raw_message)
 
     // Skip the first 12 bytes we just read in
     resourceRecord_raw_message += 12;
-    if (resourceRecord->RDATA)
+    if (resourceRecord->RDLENGTH)
     {
         resourceRecord->RDATA = (byte_t*) malloc(resourceRecord->RDLENGTH * sizeof(byte_t));
         for (int i = 0; i < resourceRecord->RDLENGTH; i++) resourceRecord->RDATA[i] = resourceRecord_raw_message[i];
