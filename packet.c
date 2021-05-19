@@ -118,7 +118,7 @@ print_packet(Packet_t *packet)
     // Print the question
     print_question(packet->question); println("");
     // Print the answer
-    if (packet->answer) print_resourceRecord(packet->answer); println("");
+    if (packet->answer) { print_resourceRecord(packet->answer); println(""); }
 
     println("------------------");
     fflush(stdout);
