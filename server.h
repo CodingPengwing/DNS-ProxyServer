@@ -2,7 +2,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define _POSIX_C_SOURCE 200112L
+// #define _POSIX_C_SOURCE 200112L
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>

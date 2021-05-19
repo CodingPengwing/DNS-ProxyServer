@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <signal.h>
 #include "util.h"
 #include "packet.h"
 #include "server.h"
@@ -19,8 +20,8 @@ int main(int argc, char* argv[])
     FILE *log_file = fopen("dns_svr.log", "w");
     Packet_t *cache[CACHE_LEN];
     pthread_mutex_t cache_lock;
-    char *server_IP = argv[1], *server_port = argv[2];
-    // char server_IP[] = "127.0.0.1", server_port[] = "8053";
+    // char *server_IP = argv[1], *server_port = argv[2];
+    char server_IP[] = "192.168.1.1", server_port[] = "53";
 
     int socketfd = create_listening_socket(); 
     while (true)
@@ -81,7 +82,10 @@ handle_query(int clientfd, FILE *log_file, char *server_IP, char *server_port, P
         /* SEND QUERY TO SERVER, GET RESPONSE */
         Packet_t *response = ask_server(server_IP, server_port, query);
         /* LOG THE RESPONSE */
-        if (response->answer) log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
+        if (response->answer) 
+        {
+            if (response->answer->TYPE == AAAA_TYPE) log_request(log_file, RESPONSE, response->question->QNAME, response->answer->IP_address);
+        }
         
 
         // pthread_mutex_lock(cache_lock)
