@@ -84,14 +84,14 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-/*  handles a SIGINT */
+/*  Handles a SIGINT */
 void
 sigint_handler(int file)
 {
     close(LISTENING_PORT);
     FILE *log_file = fopen(LOG_FILE, "a");
     fclose(log_file);
-    println("\n----- Hey there! Thanks for marking my assignment. Hope you have a nice day and stay hydrated! -----");
+    println("\n----- See you later! -----");
     exit(EXIT_SUCCESS);
 }
 
@@ -114,7 +114,11 @@ handle_query(void *args)
 
     if (query)
     {
-        print_packet(query);
+        // print the contents of the query to stdout
+        println("QUERY:");
+        print_packet(query); 
+        println("");
+
         log_request(log_file, REQUEST, query->question->QNAME, NULL);
 
         /* CHECK VALIDITY OF QUERY, IF INVALID, RESPOND WITH ERROR CODE 4 --> FINISH THREAD */
@@ -161,7 +165,6 @@ handle_query(void *args)
         }
         pthread_mutex_unlock(cache_lock);
 
-        
         /* SEND QUERY TO SERVER, GET RESPONSE */
         Packet_t *response = ask_server(server_IP, server_port, query);
         /* LOG AND CACHE THE RESPONSE */

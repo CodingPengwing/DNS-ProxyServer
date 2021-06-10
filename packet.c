@@ -64,11 +64,12 @@ parse_raw_message(Packet_t* packet)
     // Determine whether this packet is a query or response.
     packet->type = packet->header->QR;
 
-    if (!packet->header->QDCOUNT) exit_with_error("Error in parse_raw_message(): no questions.");
     raw_message += HEADER_SIZE;
+    if (!packet->header->QDCOUNT) exit_with_error("Error in parse_raw_message(): no questions in query.");
+    
     packet->question = new_question(raw_message);
 
-    // Look for the first answer
+    // Parse the first answer if this is a response
     if (packet->header->ANCOUNT)
     {
         raw_message += packet->question->length;
@@ -86,7 +87,7 @@ parse_raw_message(Packet_t* packet)
 /*  Prints all the contents of a Packet */
 void
 print_packet(Packet_t *packet)
-{       
+{
     // println("PRINTPOINT 1");fflush(stdout);
     if (!packet) exit_with_error("Error in print_packet(): null pointer.");
     static int TIME_BUFFER_LEN = 80;
@@ -140,20 +141,16 @@ free_packet(Packet_t *packet)
 }
 
 
-
-
 /*  This function creates a new header, it assumes that the raw data given has length of 12 bytes
     as specified by RFC2535. If this condition is not met, there will be an error.
 */
 Header_t *
 new_header(byte_t *header_raw_message)
 {
-
     Header_t *header = (Header_t*) malloc(sizeof(*header));
     if (!header) exit_with_error("Error in new_header(): failed malloc.");
 
     // *** Parse the raw header data into individual fields ***
-
     // The ID field is the first 2 bytes of the header
     header->ID = append_2_bytes(header_raw_message[0], header_raw_message[1]);
     // The query parameters are bytes 3 and 4 of the header
@@ -214,7 +211,6 @@ new_header(byte_t *header_raw_message)
     header->AD = AD >> AD_BIT_SHIFT;
     header->CD = CD >> CD_BIT_SHIFT;
     header->RCODE = RCODE >> RCODE_BIT_SHIFT;
-
     return header;
 }
 
@@ -248,8 +244,6 @@ free_header(Header_t *header)
     if (!header) exit_with_error("Error in free_header(): null pointer.");
     free(header);
 }
-
-
 
 
 /*  Creates a new question section for a packet, parsing all the data in this section into the Question struct.
@@ -292,13 +286,10 @@ new_question(byte_t *question_raw_message)
     }
     QNAME[i-1] = NULL_BYTE;
     question->QNAME = QNAME;
-
     // Length of QNAME including null byte
     question->QNAME_length = i;
-
     // Skip the null byte in the raw_message
     ++i;
-
     // Extract the QTYPE and QCLASS
     byte_t QTYPE_byte_1 = question_raw_message[i++];
     byte_t QTYPE_byte_2 = question_raw_message[i++];
@@ -333,10 +324,6 @@ free_question(Question_t *question)
     free(question->QNAME);
     free(question);
 }
-
-
-
-
 
 
 /* Creates a new resource record object, this function assumes that the NAME field of the resource record is in compressed form */
@@ -392,8 +379,6 @@ free_resourceRecord(ResourceRecord_t *resourceRecord)
     if (resourceRecord->RDLENGTH) free(resourceRecord->RDATA);
     free(resourceRecord);
 }
-
-
 
 void
 update_QUERYCODE(Packet_t *packet, uint8_t QUERYCODE)

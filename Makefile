@@ -1,5 +1,7 @@
 # This file is referenced from sample files provided to students as part of project 2 Comp30023 Melbourne University 2021.
 # This file contains all the logic required to compile and run the program, as well as clean afterwards.
+SERVER_ADDRESS=172.20.10.1
+SERVER_PORT=53
 
 # CC - compiler
 CC=clang
@@ -32,7 +34,7 @@ format:
 
 .PHONY: clean
 clean:
-	rm -rf dns_svr *.o *.log
+	rm -rf dns_svr dns_svr.exe *.o *.log
 
 run:
-	./dns_svr 128.250.66.5 53
+	./dns_svr $(SERVER_ADDRESS) $(SERVER_PORT)
