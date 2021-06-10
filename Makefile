@@ -34,7 +34,7 @@ format:
 
 .PHONY: clean
 clean:
-	rm -rf dns_svr dns_svr.exe *.o *.log
+	rm -rf $(BIN_MAIN) $(BIN_MAIN).exe *.o *.log
 
 run:
-	./dns_svr $(SERVER_ADDRESS) $(SERVER_PORT)
+	./$(BIN_MAIN) $(SERVER_ADDRESS) $(SERVER_PORT)
