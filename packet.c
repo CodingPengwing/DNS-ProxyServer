@@ -65,6 +65,7 @@ parse_raw_message(Packet_t* packet)
     packet->type = packet->header->QR;
 
     raw_message += HEADER_SIZE;
+    // Functionality can be added to handle queries with no questions or malformed queries
     if (!packet->header->QDCOUNT) exit_with_error("Error in parse_raw_message(): no questions in query.");
     
     packet->question = new_question(raw_message);
@@ -72,6 +73,7 @@ parse_raw_message(Packet_t* packet)
     // Parse the first answer if this is a response
     if (packet->header->ANCOUNT)
     {
+        // Skip the question bytes, assuming there's only 1 question
         raw_message += packet->question->length;
         packet->answer = new_resourceRecord(raw_message);
         packet->TTL = packet->answer->TTL;
