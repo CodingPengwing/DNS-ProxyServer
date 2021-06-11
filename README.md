@@ -40,7 +40,7 @@ following commands
 - make
 - make run
 
-**Test instructions:**
+**Test instructions:**  
 Open a new terminal window, unrelated to the one used for running the proxy. Run the following command:
 - dig +tcp -p 8053 @127.0.0.1 <some_website_address>  
 (address 127.0.0.1 indicates this is the local device, proxy will be set up at port 8053 by default)  
@@ -50,5 +50,5 @@ To compare the result to google's DNS server, run the following command:
 
 To stop running the proxy server: press ctrl+C
 
-Clean up instructions:
+**Clean up instructions**:
 - make clean
