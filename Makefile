@@ -34,7 +34,7 @@ format:
 
 .PHONY: clean
 clean:
-	rm -rf $(BIN_MAIN) $(BIN_MAIN).exe *.o *.log
+	rm -rf $(BIN_MAIN) $(BIN_MAIN).exe *.o *.log *.dSYM
 
 run:
 	./$(BIN_MAIN) $(SERVER_ADDRESS) $(SERVER_PORT)
